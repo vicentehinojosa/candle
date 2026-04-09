@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Candle — candle.codes</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body { background: #0D0B08; overflow: hidden; }
+  iframe { width: 100vw; height: 100vh; border: none; }
+</style>
+</head>
+<body>
+<iframe src="https://sirscreen.github.io/thecandle/" allow="autoplay"></iframe>
+<script>
+try {
+  var d = localStorage.getItem('candle_temple');
+  if (d) {
+    var state = JSON.parse(d);
+    if (state.visited.indexOf('candle') === -1) state.visited.push('candle');
+    localStorage.setItem('candle_temple', JSON.stringify(state));
+  }
+} catch(e) {}
+</script>
+</body>
+</html>

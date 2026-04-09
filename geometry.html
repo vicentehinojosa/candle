@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sacred Geometry — candle.codes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050510;
+    --gold: #C9A84C;
+    --parchment: #E8D5B7;
+    --ash: #8B7355;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 16px;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:1000; opacity:0.6;
+  }
+  .header { text-align:center; margin-bottom:20px; position:relative; z-index:1; }
+  .eyebrow {
+    font-family:'Cinzel',serif; font-size:8px;
+    letter-spacing:6px; color:var(--gold);
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  h1 {
+    font-family:'Cinzel',serif; font-size:18px;
+    font-weight:400; color:var(--parchment);
+    letter-spacing:2px; margin:0 0 4px;
+  }
+  .desc {
+    font-size:13px; color:var(--ash);
+    font-style:italic; max-width:300px; margin:0 auto;
+  }
+  canvas { border-radius:50%; max-width:100%; position:relative; z-index:1; }
+  .buttons {
+    display:flex; flex-wrap:wrap; justify-content:center;
+    gap:6px; margin-top:20px; max-width:420px;
+    position:relative; z-index:1;
+  }
+  .btn-form {
+    padding:6px 14px; background:transparent;
+    border:1px solid rgba(201,168,76,0.25);
+    color:#6B5B45; cursor:pointer; font-size:9px;
+    letter-spacing:2px; text-transform:uppercase;
+    font-family:'Cinzel',serif; transition:all 0.2s;
+  }
+  .btn-form.active {
+    background:rgba(201,168,76,0.15);
+    border-color:var(--gold); color:var(--gold);
+  }
+  .btn-form:hover { border-color:rgba(201,168,76,0.5); color:var(--gold); }
+  .footer-note {
+    font-size:11px; color:#3B3020; letter-spacing:2px;
+    margin-top:20px; font-family:'Cinzel',serif;
+    text-align:center; position:relative; z-index:1;
+  }
+  .return-link {
+    display:block; text-align:center; margin-top:16px;
+    font-family:'Cinzel',serif; font-size:9px;
+    letter-spacing:3px; text-transform:uppercase;
+    color:var(--ash); text-decoration:none;
+    opacity:0.4; transition:opacity 0.3s;
+    position:relative; z-index:1;
+  }
+  .return-link:hover { opacity:0.8; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Sacred Geometry</div>
+  <h1 id="form-title">Flower of Life</h1>
+  <p class="desc" id="form-desc">The generative pattern — creation through overlapping circles</p>
+</div>
+
+<canvas id="canvas" width="380" height="380"></canvas>
+
+<div class="buttons" id="buttons"></div>
+
+<p class="footer-note">All forms rotate continuously · Breathing with the golden ratio</p>
+<a href="/" class="return-link">Return to the Temple</a>
+
+<script>
+const TAU = Math.PI * 2;
+
+const FORMS = [
+  { id:'flower', label:'Flower of Life', desc:'The generative pattern — creation through overlapping circles' },
+  { id:'metatron', label:"Metatron's Cube", desc:'All Platonic solids encoded within 13 circles' },
+  { id:'sri', label:'Sri Yantra', desc:'Nine interlocking triangles — the geometry of consciousness' },
+  { id:'fibonacci', label:'Fibonacci Spiral', desc:'The golden ratio made visible — growth as a living law' },
+  { id:'vesica', label:'Vesica Piscis', desc:'The intersection — where two worlds meet and generate a third' },
+];
+
+let currentForm = 'flower';
+
+// Build buttons
+const btnContainer = document.getElementById('buttons');
+FORMS.forEach(f => {
+  const btn = document.createElement('button');
+  btn.className = 'btn-form' + (f.id === currentForm ? ' active' : '');
+  btn.textContent = f.label;
+  btn.onclick = () => {
+    currentForm = f.id;
+    document.getElementById('form-title').textContent = f.label;
+    document.getElementById('form-desc').textContent = f.desc;
+    document.querySelectorAll('.btn-form').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+  btnContainer.appendChild(btn);
+});
+
+// Drawing functions
+function drawFlowerOfLife(ctx, cx, cy, r, depth){
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.stroke();
+  if(depth <= 0) return;
+  for(let i=0; i<6; i++){
+    const x = cx + r*Math.cos(i*TAU/6);
+    const y = cy + r*Math.sin(i*TAU/6);
+    drawFlowerOfLife(ctx, x, y, r, depth-1);
+  }
+}
+
+function drawMetatron(ctx, cx, cy, r){
+  const centers = [[cx,cy]];
+  for(let i=0;i<6;i++) centers.push([cx+r*Math.cos(i*TAU/6), cy+r*Math.sin(i*TAU/6)]);
+  for(let i=0;i<6;i++){
+    const a = i*TAU/6 + TAU/12;
+    centers.push([cx+r*Math.sqrt(3)*Math.cos(a), cy+r*Math.sqrt(3)*Math.sin(a)]);
+  }
+  ctx.beginPath();
+  for(let i=0;i<centers.length;i++)
+    for(let j=i+1;j<centers.length;j++){
+      ctx.moveTo(centers[i][0],centers[i][1]);
+      ctx.lineTo(centers[j][0],centers[j][1]);
+    }
+  ctx.stroke();
+  centers.forEach(([x,y])=>{ ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.stroke(); });
+}
+
+function drawSriYantra(ctx, cx, cy, size){
+  const triangles = [
+    {pts:[[0,-1],[0.866,0.5],[-0.866,0.5]]},
+    {pts:[[0,1],[0.866,-0.5],[-0.866,-0.5]]},
+    {pts:[[0,-0.85],[0.736,0.425],[-0.736,0.425]]},
+    {pts:[[0,0.85],[0.736,-0.425],[-0.736,-0.425]]},
+    {pts:[[0,-0.65],[0.563,0.325],[-0.563,0.325]]},
+    {pts:[[0,0.65],[0.563,-0.325],[-0.563,-0.325]]},
+    {pts:[[0,-0.45],[0.39,0.225],[-0.39,0.225]]},
+    {pts:[[0,0.45],[0.39,-0.225],[-0.39,-0.225]]},
+    {pts:[[0,-0.25],[0.217,0.125],[-0.217,0.125]]},
+  ];
+  triangles.forEach(({pts})=>{
+    ctx.beginPath();
+    pts.forEach(([px,py],i)=>{
+      const x=cx+px*size, y=cy+py*size;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.closePath(); ctx.stroke();
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,size*0.04,0,TAU); ctx.fill();
+  [1.08,1.18].forEach(s=>{ ctx.beginPath(); ctx.arc(cx,cy,size*s,0,TAU); ctx.stroke(); });
+}
+
+function drawFibonacci(ctx, cx, cy, size, angle){
+  const fib=[1,1,2,3,5,8,13,21,34,55,89];
+  let x=cx, y=cy, dir=angle;
+  ctx.beginPath();
+  fib.forEach((f,i)=>{
+    if(i===0) return;
+    const r=f*(size/89);
+    ctx.arc(x,y,r,dir+Math.PI,dir+Math.PI/2,true);
+    const prevF=fib[i-1]*(size/89);
+    const dirs=[[1,0],[0,-1],[-1,0],[0,1]];
+    const d=dirs[i%4];
+    x+=d[0]*prevF; y+=d[1]*prevF;
+  });
+  ctx.stroke();
+}
+
+function drawVesicaPiscis(ctx, cx, cy, r){
+  const offset=r*0.5;
+  ctx.beginPath(); ctx.arc(cx-offset,cy,r,0,TAU); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx+offset,cy,r,0,TAU); ctx.stroke();
+  const h=Math.sqrt(r*r-offset*offset);
+  ctx.beginPath();
+  ctx.arc(cx-offset,cy,r,-Math.acos(offset/r),Math.acos(offset/r));
+  ctx.arc(cx+offset,cy,r,Math.PI-Math.acos(offset/r),Math.PI+Math.acos(offset/r));
+  ctx.closePath();
+  ctx.fillStyle='rgba(201,168,76,0.08)'; ctx.fill();
+  ctx.fillStyle='rgba(201,168,76,0)';
+}
+
+// Animation
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2;
+
+function animate(t){
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,W*0.6);
+  bg.addColorStop(0,'#0f0f22'); bg.addColorStop(1,'#050510');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+  // Starfield
+  ctx.fillStyle='rgba(201,168,76,0.3)';
+  for(let i=0;i<80;i++){
+    const sx=(Math.sin(i*127.1+42)*0.5+0.5)*W;
+    const sy=(Math.sin(i*311.7+42)*0.5+0.5)*H;
+    const sr=0.5+Math.sin(t*0.001+i)*0.3;
+    ctx.beginPath(); ctx.arc(sx,sy,sr,0,TAU); ctx.fill();
+  }
+
+  const rot=(t*0.0002)%TAU;
+  const p=0.97+0.03*Math.sin(t*0.0015);
+  const size=Math.min(W,H)*0.38*p;
+
+  ctx.save();
+  ctx.translate(cx,cy); ctx.rotate(rot); ctx.translate(-cx,-cy);
+  ctx.strokeStyle='#C9A84C'; ctx.lineWidth=0.8;
+  ctx.globalAlpha=0.7; ctx.fillStyle='#C9A84C';
+
+  const r=size*0.33;
+  if(currentForm==='flower') drawFlowerOfLife(ctx,cx,cy,r,2);
+  else if(currentForm==='metatron') drawMetatron(ctx,cx,cy,r*0.9);
+  else if(currentForm==='sri') drawSriYantra(ctx,cx,cy,size*0.82);
+  else if(currentForm==='fibonacci') drawFibonacci(ctx,cx,cy,size*1.1,rot);
+  else if(currentForm==='vesica') drawVesicaPiscis(ctx,cx,cy,r*1.2);
+
+  ctx.restore();
+
+  // Outer rings
+  ctx.globalAlpha=0.25; ctx.strokeStyle='#C9A84C'; ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.arc(cx,cy,size*1.1,0,TAU); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,size*1.18,0,TAU); ctx.stroke();
+
+  // Tick marks
+  ctx.globalAlpha=0.3;
+  for(let i=0;i<72;i++){
+    const a=i*TAU/72;
+    const r1=size*1.1, r2=size*1.1+(i%6===0?8:4);
+    ctx.beginPath();
+    ctx.moveTo(cx+r1*Math.cos(a),cy+r1*Math.sin(a));
+    ctx.lineTo(cx+r2*Math.cos(a),cy+r2*Math.sin(a));
+    ctx.lineWidth=i%6===0?1:0.4;
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+// Mark visited
+try {
+  const d = localStorage.getItem('candle_temple');
+  if(d){
+    const state = JSON.parse(d);
+    if(!state.visited.includes('geometry')) state.visited.push('geometry');
+    localStorage.setItem('candle_temple', JSON.stringify(state));
+  }
+} catch(e){}
+</script>
+</body>
+</html>
