@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Natal Chart — candle.codes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050510;
+    --gold: #C9A84C;
+    --parchment: #E8D5B7;
+    --ash: #8B7355;
+  }
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background: linear-gradient(160deg,#06060f 0%,#0a0a1a 50%,#06060f 100%);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:1000; opacity:0.6;
+  }
+  .container {
+    position:relative; z-index:1;
+    max-width:520px; margin:0 auto; padding:32px 16px;
+  }
+  .header { text-align:center; margin-bottom:32px; }
+  .eyebrow {
+    font-family:'Cinzel',serif; font-size:8px;
+    letter-spacing:6px; color:var(--gold);
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  h1 {
+    font-family:'Cinzel',serif; font-size:22px;
+    font-weight:400; color:var(--parchment);
+    letter-spacing:2px; margin:0 0 8px;
+  }
+  .subtitle { font-size:13px; color:#6B5B45; font-style:italic; margin:0; }
+
+  /* Form */
+  .form-grid { display:flex; flex-direction:column; gap:18px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .form-label {
+    display:block; font-family:'Cinzel',serif; font-size:8px;
+    letter-spacing:3px; color:var(--ash); margin-bottom:6px; text-transform:uppercase;
+  }
+  .form-input {
+    width:100%; background:rgba(201,168,76,0.05);
+    border:1px solid rgba(201,168,76,0.25); color:var(--parchment);
+    font-family:'Cormorant Garamond',serif; font-size:15px;
+    padding:10px 12px; outline:none; color-scheme:dark;
+  }
+  .form-input:focus { border-color:rgba(201,168,76,0.5); }
+  .form-input::placeholder { color:rgba(232,213,183,0.2); font-style:italic; }
+  select.form-input { cursor:pointer; }
+
+  .form-error {
+    color:#FC8181; font-family:'Cinzel',serif;
+    font-size:9px; letter-spacing:2px; text-align:center;
+  }
+  .manual-help {
+    font-size:10px; color:#5B4B3B; font-family:'Cinzel',serif;
+    letter-spacing:1px; margin-top:6px;
+  }
+
+  .btn-cast {
+    padding:14px; margin-top:4px;
+    background:rgba(201,168,76,0.1);
+    border:1px solid var(--gold); color:var(--gold);
+    font-family:'Cinzel',serif; font-size:10px;
+    letter-spacing:4px; text-transform:uppercase;
+    cursor:pointer; transition:all 0.2s; width:100%;
+  }
+  .btn-cast:hover { background:rgba(201,168,76,0.18); }
+  .btn-cast:disabled { opacity:0.4; cursor:wait; }
+
+  .footer-note {
+    text-align:center; font-size:10px; color:#2B2018;
+    font-family:'Cinzel',serif; letter-spacing:1px; margin-top:24px;
+  }
+
+  /* Chart view */
+  .chart-header { text-align:center; margin-bottom:20px; }
+  .chart-name {
+    font-family:'Cinzel',serif; font-size:20px;
+    font-weight:400; letter-spacing:2px; margin:0 0 4px;
+  }
+  .chart-details {
+    font-size:11px; color:var(--ash); letter-spacing:1px;
+    font-family:'Cinzel',serif; margin:0 0 10px;
+  }
+  .chart-badges {
+    display:flex; justify-content:center; gap:6px; flex-wrap:wrap;
+  }
+  .chart-badge {
+    font-size:9px; letter-spacing:1px; color:var(--gold);
+    border:1px solid rgba(201,168,76,0.4);
+    padding:2px 8px; font-family:'Cinzel',serif;
+  }
+
+  /* Tabs */
+  .tabs {
+    display:flex; justify-content:center;
+    margin-bottom:20px;
+    border-bottom:1px solid rgba(201,168,76,0.2);
+  }
+  .tab-btn {
+    padding:8px 16px; background:transparent;
+    color:#6B5B45; border:none;
+    border-bottom:2px solid transparent;
+    cursor:pointer; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; font-family:'Cinzel',serif;
+    transition:all 0.2s;
+  }
+  .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+  .tab-btn:hover { color:var(--gold); }
+  .tab-btn-new {
+    padding:8px 16px; background:transparent;
+    color:#3B3020; border:none;
+    border-bottom:2px solid transparent;
+    cursor:pointer; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; font-family:'Cinzel',serif;
+    margin-left:auto;
+  }
+  .tab-btn-new:hover { color:var(--ash); }
+
+  /* Wheel container */
+  .wheel-wrap {
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+  }
+  .wheel-footer {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:4px 24px; font-size:10px; color:var(--ash);
+    letter-spacing:1px; font-family:'Cinzel',serif;
+  }
+  .wheel-footer span { color:var(--gold); }
+
+  /* Placements */
+  .placements-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; }
+  .placement-cell {
+    padding:12px 14px; background:rgba(201,168,76,0.04);
+    border-bottom:1px solid rgba(201,168,76,0.1);
+    display:flex; align-items:center; gap:10px;
+  }
+  .placement-symbol { font-size:20px; width:26px; text-align:center; line-height:1; }
+  .placement-label {
+    font-size:8px; color:#6B5B45; letter-spacing:2px;
+    text-transform:uppercase; font-family:'Cinzel',serif; margin-bottom:2px;
+  }
+  .placement-value { font-size:14px; }
+  .placement-element { font-size:9px; color:#5B4B3B; font-family:'Cinzel',serif; letter-spacing:1px; }
+
+  /* Stellium */
+  .stellium-box {
+    margin:16px 0 0; padding:16px;
+    border:1px solid rgba(201,168,76,0.3);
+    background:rgba(201,168,76,0.06);
+  }
+  .stellium-label {
+    font-family:'Cinzel',serif; font-size:8px;
+    letter-spacing:3px; color:var(--gold);
+    text-transform:uppercase; margin-bottom:8px;
+  }
+  .stellium-text {
+    font-size:13px; color:#C4A882; line-height:1.7; font-style:italic;
+  }
+
+  /* Reading */
+  .reading-text {
+    line-height:1.85; font-size:15px; color:#D4C4A8;
+    white-space:pre-wrap; padding:0 4px;
+  }
+  .reading-loading {
+    text-align:center; padding:60px 0;
+  }
+  .reading-loading-symbol {
+    font-size:28px; color:var(--gold); margin-bottom:16px;
+  }
+  .reading-loading-text {
+    font-family:'Cinzel',serif; font-size:9px;
+    letter-spacing:4px; color:#6B5B45; text-transform:uppercase;
+  }
+  @keyframes breathe {
+    0%,100% { opacity:0.4; } 50% { opacity:0.8; }
+  }
+  .reading-loading-symbol { animation: breathe 2s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+// ═══════════════════════════════════════
+// ASTRONOMICAL ENGINE — Jean Meeus
+// ═══════════════════════════════════════
+const toRad=d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI, norm=d=>((d%360)+360)%360;
+
+function julianDay(year,month,day,hourUT){
+  let y=year,m=month;
+  if(m<=2){y--;m+=12;}
+  const A=Math.floor(y/100),B=2-A+Math.floor(A/4);
+  return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+day+B-1524.5+hourUT/24;
+}
+function sunLongitude(T){
+  const L0=norm(280.46646+36000.76983*T);
+  const M=norm(357.52911+35999.05029*T-0.0001537*T*T);
+  const C=(1.914602-0.004817*T)*Math.sin(toRad(M))+(0.019993-0.000101*T)*Math.sin(toRad(2*M))+0.000289*Math.sin(toRad(3*M));
+  return norm(L0+C);
+}
+function moonLongitude(T){
+  const L=218.3165+481267.8813*T, M=norm(134.9634+477198.8676*T);
+  const Ms=norm(357.5291+35999.0503*T), F=norm(93.2721+483202.0175*T), D=norm(297.8502+445267.1115*T);
+  const dL=6893*Math.sin(toRad(M))+72*Math.sin(toRad(2*M))+1274*Math.sin(toRad(2*D-M))+658*Math.sin(toRad(2*D))
+    -186*Math.sin(toRad(Ms))-214*Math.sin(toRad(2*F))+192*Math.sin(toRad(2*D+M))+148*Math.sin(toRad(2*D-Ms))-38*Math.sin(toRad(2*D-2*M));
+  return norm(L+dL/3600);
+}
+const HELIO={
+  Mercury:{L0:252.2509,L1:149472.6746,r:0.387},Venus:{L0:181.9798,L1:58517.8157,r:0.723},
+  Mars:{L0:355.4330,L1:19140.3023,r:1.524},Jupiter:{L0:34.3515,L1:3034.9056,r:5.203},
+  Saturn:{L0:50.0774,L1:1222.1138,r:9.537},Uranus:{L0:314.0550,L1:428.4668,r:19.19},
+  Neptune:{L0:304.3487,L1:218.4862,r:30.07},Pluto:{L0:238.9508,L1:145.2008,r:39.48},
+};
+function planetGeoLon(name,T,sunLon){
+  const el=HELIO[name]; const h=norm(el.L0+el.L1*T);
+  if(name==='Mercury'||name==='Venus'){
+    const earthLon=norm(sunLon+180);
+    const xP=el.r*Math.cos(toRad(h)),yP=el.r*Math.sin(toRad(h));
+    const xE=Math.cos(toRad(earthLon)),yE=Math.sin(toRad(earthLon));
+    return norm(toDeg(Math.atan2(yP-yE,xP-xE)));
+  }
+  return h;
+}
+function calcAngles(jd,lat,lon){
+  const JD0=Math.floor(jd-0.5)+0.5, T0=(JD0-2451545.0)/36525;
+  const G0=norm(100.4606184+36000.77004*T0+0.000387933*T0*T0);
+  const GMST=norm(G0+360.98564724*(jd-JD0)), RAMC=norm(GMST+lon);
+  const T=(jd-2451545.0)/36525, eps=23.4392911-0.013004167*T;
+  const ASC=norm(toDeg(Math.atan2(Math.cos(toRad(RAMC)),-Math.sin(toRad(RAMC))*Math.cos(toRad(eps))-Math.tan(toRad(lat))*Math.sin(toRad(eps)))));
+  const MC=norm(toDeg(Math.atan2(Math.sin(toRad(RAMC)),Math.cos(toRad(RAMC))*Math.cos(toRad(eps)))));
+  return {ASC,MC};
+}
+function calculateChart({year,month,day,hourUT,lat,lon}){
+  const jd=julianDay(year,month,day,hourUT), T=(jd-2451545.0)/36525;
+  const sun=sunLongitude(T), moon=moonLongitude(T), {ASC,MC}=calcAngles(jd,lat,lon);
+  const positions={Sun:sun,Moon:moon,ASC,MC};
+  for(const name of ['Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'])
+    positions[name]=planetGeoLon(name,T,sun);
+  return positions;
+}
+
+// ═══════════════════════════════════════
+// SIGN DATA
+// ═══════════════════════════════════════
+const SIGNS=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const GLYPHS=['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+const ELEMENTS=['Fire','Earth','Air','Water','Fire','Earth','Air','Water','Fire','Earth','Air','Water'];
+const SIGN_COLORS=['#c0392b','#8B6914','#2980b9','#1a5276','#c0392b','#8B6914','#2980b9','#1a5276','#c0392b','#8B6914','#2980b9','#1a5276'];
+
+function signOf(lon){
+  const i=Math.floor(((lon%360)+360)%360/30), d=lon-i*30;
+  return {name:SIGNS[i],glyph:GLYPHS[i],index:i,element:ELEMENTS[i],deg:Math.floor(d),min:Math.floor((d%1)*60)};
+}
+
+const SYMBOLS={Sun:'☉',Moon:'☽',Mercury:'☿',Venus:'♀',Mars:'♂',Jupiter:'♃',Saturn:'♄',Uranus:'♅',Neptune:'♆',Pluto:'♇',ASC:'⊕',MC:'↑'};
+const P_COLORS={Sun:'#FFD700',Moon:'#CBD5E0',Mercury:'#90CDF4',Venus:'#FEB2B2',Mars:'#FC8181',Jupiter:'#F6AD55',Saturn:'#B7791F',Uranus:'#81E6D9',Neptune:'#9F7AEA',Pluto:'#B794F4',ASC:'#FFFFFF',MC:'#FFFFFF'};
+const DISPLAY_ORDER=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','ASC','MC'];
+
+function findStelliums(positions){
+  const counts={};
+  for(const name of ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','ASC']){
+    const s=signOf(positions[name]).name;
+    counts[s]=(counts[s]||[]); counts[s].push(name);
+  }
+  return Object.entries(counts).filter(([,b])=>b.length>=3);
+}
+
+const UTC_OFFSETS=[
+  {label:'UTC−12',val:-12},{label:'UTC−11',val:-11},{label:'UTC−10 (Hawaii)',val:-10},
+  {label:'UTC−9 (Alaska)',val:-9},{label:'UTC−8 (Pacific)',val:-8},
+  {label:'UTC−7 (Mountain)',val:-7},{label:'UTC−6 (Central)',val:-6},
+  {label:'UTC−5 (Eastern)',val:-5},{label:'UTC−4 (Atlantic)',val:-4},
+  {label:'UTC−3',val:-3},{label:'UTC−2',val:-2},{label:'UTC−1',val:-1},
+  {label:'UTC±0 (GMT)',val:0},{label:'UTC+1 (CET)',val:1},{label:'UTC+2 (EET)',val:2},
+  {label:'UTC+3 (Moscow)',val:3},{label:'UTC+4',val:4},{label:'UTC+5',val:5},
+  {label:'UTC+5:30 (India)',val:5.5},{label:'UTC+6',val:6},{label:'UTC+7 (Bangkok)',val:7},
+  {label:'UTC+8 (Beijing)',val:8},{label:'UTC+9 (Tokyo)',val:9},
+  {label:'UTC+10 (Sydney)',val:10},{label:'UTC+11',val:11},{label:'UTC+12',val:12},
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let formData = { name:'',date:'',time:'',city:'',utcOffset:'-7',manualCoords:'',showManual:false };
+let birthData = null;
+let chart = null;
+let currentTab = 'wheel';
+let reading = '';
+let loadingReading = false;
+
+// Pre-fill from temple
+try {
+  const d=localStorage.getItem('temple_visitor');
+  if(d){ const p=JSON.parse(d); if(p.name) formData.name=p.name; if(p.date) formData.date=p.date; }
+  const n=localStorage.getItem('natal_reading');
+  if(n){ const p=JSON.parse(n); if(p.name) formData.name=p.name; if(p.date) formData.date=p.date; }
+} catch(e){}
+
+const app=document.getElementById('app');
+
+function render(){
+  if(!chart) renderForm();
+  else renderChart();
+}
+
+function renderForm(){
+  const utcOptions = UTC_OFFSETS.map(o=>`<option value="${o.val}" ${formData.utcOffset==o.val?'selected':''}>${o.label}</option>`).join('');
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="eyebrow">Nativity</div>
+      <h1>Natal Chart</h1>
+      <p class="subtitle">Enter your birth details to cast your chart</p>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="form-label">Full Name</label>
+        <input class="form-input" id="f-name" value="${formData.name}" placeholder="As it appears on your birth certificate">
+      </div>
+      <div class="form-row">
+        <div><label class="form-label">Birth Date</label><input type="date" class="form-input" id="f-date" value="${formData.date}"></div>
+        <div><label class="form-label">Birth Time (local)</label><input type="time" class="form-input" id="f-time" value="${formData.time}"></div>
+      </div>
+      <div>
+        <label class="form-label">Birth City</label>
+        <input class="form-input" id="f-city" value="${formData.city}" placeholder="e.g. Paris, France or Denver, Colorado">
+      </div>
+      <div>
+        <label class="form-label">Time Zone at Birth</label>
+        <select class="form-input" id="f-tz">${utcOptions}</select>
+      </div>
+      <div id="error-area"></div>
+      <div id="manual-area" style="display:${formData.showManual?'block':'none'}">
+        <label class="form-label">Manual Coordinates (lat, lon)</label>
+        <input class="form-input" id="f-coords" value="${formData.manualCoords}" placeholder="e.g. 39.6483, -104.9878">
+        <p class="manual-help">Find coordinates at maps.google.com — right-click any location</p>
+      </div>
+      <button class="btn-cast" id="btn-resolve" onclick="resolveCity()">Cast Chart ✦</button>
+    </div>
+    <p class="footer-note">Tropical Zodiac · Placidus Houses · Jean Meeus Algorithms</p>
+    <a href="/" style="display:block;text-align:center;margin-top:16px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ash);text-decoration:none;opacity:0.4;">Return to the Temple</a>
+  `;
+}
+
+async function resolveCity(){
+  formData.name=document.getElementById('f-name').value;
+  formData.date=document.getElementById('f-date').value;
+  formData.time=document.getElementById('f-time').value;
+  formData.city=document.getElementById('f-city').value;
+  formData.utcOffset=document.getElementById('f-tz').value;
+  const coordsEl=document.getElementById('f-coords');
+  if(coordsEl) formData.manualCoords=coordsEl.value;
+
+  const errorArea=document.getElementById('error-area');
+  errorArea.innerHTML='';
+
+  if(!formData.name||!formData.date||!formData.time||!formData.city){
+    errorArea.innerHTML='<div class="form-error">All fields are required.</div>';
+    return;
+  }
+
+  if(formData.manualCoords){
+    const parts=formData.manualCoords.split(',').map(s=>parseFloat(s.trim()));
+    if(parts.length===2&&!isNaN(parts[0])&&!isNaN(parts[1])){
+      castWithCoords(parts[0],parts[1],formData.city);
+      return;
+    } else {
+      errorArea.innerHTML='<div class="form-error">Coordinates must be: lat, lon (e.g. 39.64, -104.98)</div>';
+      return;
+    }
+  }
+
+  document.getElementById('btn-resolve').disabled=true;
+  document.getElementById('btn-resolve').textContent='Resolving coordinates…';
+
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','x-api-key':'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'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:300,
+        messages:[{role:'user',content:`You are a geocoding service. Return ONLY a raw JSON object with no markdown, no backticks, no explanation — just the JSON object starting with {.\n\nBirth location: "${formData.city}"\n\nResolve to coordinates. If ambiguous, use the most populated match.\n\nRequired format:\n{"lat": 39.6483, "lon": -104.9878, "resolved": "Englewood, Colorado, USA"}`}]
+      })
+    });
+    const data=await res.json();
+    const raw=data.content?.map(b=>b.text||'').join('').trim();
+    const match=raw.match(/\{[\s\S]*\}/);
+    if(!match) throw new Error('No JSON');
+    const geo=JSON.parse(match[0]);
+    if(!geo.lat||!geo.lon) throw new Error('Invalid');
+    castWithCoords(geo.lat,geo.lon,geo.resolved||formData.city);
+  } catch(e){
+    formData.showManual=true;
+    errorArea.innerHTML='<div class="form-error">City not found. Enter coordinates manually below.</div>';
+    document.getElementById('manual-area').style.display='block';
+    document.getElementById('btn-resolve').disabled=false;
+    document.getElementById('btn-resolve').textContent='Cast Chart ✦';
+  }
+}
+
+function castWithCoords(lat,lon,cityName){
+  const[yr,mo,dy]=formData.date.split('-').map(Number);
+  const[hr,mn]=formData.time.split(':').map(Number);
+  const utcOff=parseFloat(formData.utcOffset);
+  const hourUT=hr+mn/60-utcOff;
+  birthData={year:yr,month:mo,day:dy,hourUT,lat,lon,name:formData.name,city:cityName,localTime:formData.time,utcOffset:formData.utcOffset};
+  chart=calculateChart(birthData);
+  currentTab='wheel'; reading=''; loadingReading=false;
+  renderChart();
+
+  // Mark visited
+  try {
+    const d=localStorage.getItem('candle_temple');
+    if(d){ const state=JSON.parse(d); if(!state.visited.includes('natal')) state.visited.push('natal'); localStorage.setItem('candle_temple',JSON.stringify(state)); }
+  } catch(e){}
+}
+
+function renderChart(){
+  const sunS=signOf(chart.Sun),moonS=signOf(chart.Moon),ascS=signOf(chart.ASC);
+  const[yr,mo,dy]=formData.date.split('-').map(Number);
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr=`${dy} ${months[mo-1]} ${yr}`;
+
+  app.innerHTML = `
+    <div class="chart-header">
+      <div class="eyebrow">Nativity</div>
+      <h1 class="chart-name">${birthData.name}</h1>
+      <p class="chart-details">${dateStr} · ${formData.time} · ${birthData.city}</p>
+      <div class="chart-badges">
+        <span class="chart-badge">${ascS.name} Rising</span>
+        <span class="chart-badge">Sun in ${sunS.name}</span>
+        <span class="chart-badge">Moon in ${moonS.name}</span>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn ${currentTab==='wheel'?'active':''}" onclick="setTab('wheel')">Wheel</button>
+      <button class="tab-btn ${currentTab==='placements'?'active':''}" onclick="setTab('placements')">Placements</button>
+      <button class="tab-btn ${currentTab==='reading'?'active':''}" onclick="fetchReading()">Full Reading ✦</button>
+      <button class="tab-btn-new" onclick="resetChart()">New ↩</button>
+    </div>
+    <div id="tab-content"></div>
+  `;
+
+  renderTab();
+}
+
+function setTab(t){ currentTab=t; renderChart(); }
+function resetChart(){ chart=null; birthData=null; reading=''; render(); }
+
+function renderTab(){
+  const el=document.getElementById('tab-content');
+  if(currentTab==='wheel') renderWheel(el);
+  else if(currentTab==='placements') renderPlacements(el);
+  else if(currentTab==='reading') renderReadingTab(el);
+}
+
+function renderWheel(el){
+  // Build SVG
+  const cx=210,cy=210,R=195,r2=160,r3=120;
+  const toAngle=lon=>toRad(180-norm(lon-chart.ASC));
+
+  let svg=`<svg width="420" height="420" viewBox="0 0 420 420" style="max-width:100%;">
+    <defs><radialGradient id="bgGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#111130"/><stop offset="100%" stop-color="#050510"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <circle cx="${cx}" cy="${cy}" r="${R+5}" fill="url(#bgGrad)"/>
+    <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#C9A84C" stroke-width="1"/>
+    <circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="#C9A84C" stroke-width="0.6"/>
+    <circle cx="${cx}" cy="${cy}" r="${r3}" fill="none" stroke="#C9A84C" stroke-width="0.4" stroke-opacity="0.5"/>
+    <circle cx="${cx}" cy="${cy}" r="30" fill="none" stroke="#C9A84C" stroke-width="0.3" stroke-opacity="0.4"/>`;
+
+  // Sectors
+  for(let i=0;i<12;i++){
+    const a1=toAngle(i*30),a2=toAngle((i+1)*30),mid=toAngle(i*30+15);
+    const x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2);
+    const x3=cx+r2*Math.cos(a2),y3=cy+r2*Math.sin(a2),x4=cx+r2*Math.cos(a1),y4=cy+r2*Math.sin(a1);
+    const tx=cx+(R-17)*Math.cos(mid),ty=cy+(R-17)*Math.sin(mid);
+    svg+=`<path d="M${x1},${y1} A${R},${R} 0 0,0 ${x2},${y2} L${x3},${y3} A${r2},${r2} 0 0,1 ${x4},${y4} Z" fill="${SIGN_COLORS[i]}" fill-opacity="0.18" stroke="#C9A84C" stroke-width="0.7"/>`;
+    svg+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#C9A84C" font-family="serif">${GLYPHS[i]}</text>`;
+  }
+
+  // Ticks
+  for(let i=0;i<72;i++){
+    const a=toAngle(i*5),major=i%6===0;
+    svg+=`<line x1="${cx+r2*Math.cos(a)}" y1="${cy+r2*Math.sin(a)}" x2="${cx+(r2-(major?12:5))*Math.cos(a)}" y2="${cy+(r2-(major?12:5))*Math.sin(a)}" stroke="#C9A84C" stroke-width="${major?0.8:0.3}" stroke-opacity="0.6"/>`;
+  }
+
+  // Axes
+  const ascA=toAngle(chart.ASC),dcA=toAngle(norm(chart.ASC+180)),mcA=toAngle(chart.MC),icA=toAngle(norm(chart.MC+180));
+  svg+=`<line x1="${cx+r3*Math.cos(ascA)}" y1="${cy+r3*Math.sin(ascA)}" x2="${cx+r3*Math.cos(dcA)}" y2="${cy+r3*Math.sin(dcA)}" stroke="rgba(201,168,76,0.4)" stroke-width="0.8"/>`;
+  svg+=`<line x1="${cx+r3*Math.cos(mcA)}" y1="${cy+r3*Math.sin(mcA)}" x2="${cx+r3*Math.cos(icA)}" y2="${cy+r3*Math.sin(icA)}" stroke="rgba(201,168,76,0.4)" stroke-width="0.8"/>`;
+
+  // Angle markers
+  [{lon:chart.ASC,label:'AC'},{lon:norm(chart.ASC+180),label:'DC'},{lon:chart.MC,label:'MC'},{lon:norm(chart.MC+180),label:'IC'}].forEach(({lon,label})=>{
+    const a=toAngle(lon),rm=r2-7;
+    svg+=`<text x="${cx+rm*Math.cos(a)}" y="${cy+rm*Math.sin(a)}" text-anchor="middle" dominant-baseline="middle" font-size="7" fill="#C9A84C" font-family="sans-serif" font-weight="600">${label}</text>`;
+  });
+
+  // Planets
+  DISPLAY_ORDER.filter(n=>n!=='ASC'&&n!=='MC').forEach(name=>{
+    const lon=chart[name],angle=toAngle(lon),rp=r3-10;
+    const x=cx+rp*Math.cos(angle),y=cy+rp*Math.sin(angle);
+    const lx=cx+(r3-32)*Math.cos(angle),ly=cy+(r3-32)*Math.sin(angle);
+    const s=signOf(lon);
+    svg+=`<line x1="${cx+r2*Math.cos(angle)}" y1="${cy+r2*Math.sin(angle)}" x2="${cx+(r3+5)*Math.cos(angle)}" y2="${cy+(r3+5)*Math.sin(angle)}" stroke="${P_COLORS[name]}" stroke-width="0.5" stroke-opacity="0.4"/>`;
+    svg+=`<circle cx="${x}" cy="${y}" r="11" fill="#0a0a18" stroke="${P_COLORS[name]}" stroke-width="1.2"/>`;
+    svg+=`<text x="${x}" y="${y+1}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="${P_COLORS[name]}" font-family="serif">${SYMBOLS[name]}</text>`;
+    svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="7" fill="${P_COLORS[name]}" opacity="0.7">${s.deg}°${GLYPHS[s.index]}</text>`;
+  });
+
+  svg+=`<circle cx="${cx}" cy="${cy}" r="4" fill="#C9A84C" filter="url(#glow)"/>`;
+  svg+=`<circle cx="${cx}" cy="${cy}" r="1.5" fill="#fff"/>`;
+  svg+=`</svg>`;
+
+  const ascSig=signOf(chart.ASC), mcSig=signOf(chart.MC);
+  el.innerHTML=`
+    <div class="wheel-wrap">
+      ${svg}
+      <div class="wheel-footer">
+        <div style="text-align:center"><span>ASC</span> ${ascSig.deg}°${ascSig.min.toString().padStart(2,'0')}′ ${ascSig.glyph} ${ascSig.name}</div>
+        <div style="text-align:center"><span>MC</span> ${mcSig.deg}°${mcSig.min.toString().padStart(2,'0')}′ ${mcSig.glyph} ${mcSig.name}</div>
+      </div>
+      <p class="footer-note">Tropical Zodiac · Placidus · UTC${parseFloat(formData.utcOffset)>=0?'+':''}${formData.utcOffset}</p>
+    </div>
+  `;
+}
+
+function renderPlacements(el){
+  const stelliums=findStelliums(chart);
+  let html='<div class="placements-grid">';
+  DISPLAY_ORDER.forEach(name=>{
+    const s=signOf(chart[name]);
+    html+=`<div class="placement-cell">
+      <span class="placement-symbol" style="color:${P_COLORS[name]}">${SYMBOLS[name]}</span>
+      <div>
+        <div class="placement-label">${name}</div>
+        <div class="placement-value">${s.deg}°${s.min.toString().padStart(2,'0')}′ ${s.glyph} ${s.name}</div>
+        <div class="placement-element">${s.element}</div>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+
+  stelliums.forEach(([sign,bodies])=>{
+    html+=`<div class="stellium-box"><div class="stellium-label">${sign} Stellium</div>
+      <p class="stellium-text">${bodies.join(' · ')} — ${bodies.length} placements unified under one archetype.${bodies.length>=4?' This is rare.':''}</p></div>`;
+  });
+
+  el.innerHTML=html;
+}
+
+async function fetchReading(){
+  currentTab='reading';
+  renderChart();
+  const el=document.getElementById('tab-content');
+
+  if(reading){ el.innerHTML=`<div class="reading-text">${reading}</div>`; return; }
+
+  el.innerHTML=`<div class="reading-loading"><div class="reading-loading-symbol">✦</div><div class="reading-loading-text">Reading the chart…</div></div>`;
+
+  const placements=DISPLAY_ORDER.map(name=>{const s=signOf(chart[name]);return`${name}: ${s.deg}°${s.min.toString().padStart(2,'0')}' ${s.name}`;}).join('\n');
+  const stelliums=findStelliums(chart);
+  const stelliumNote=stelliums.length>0?`Notable stelliums: ${stelliums.map(([sign,bodies])=>`${bodies.join(', ')} in ${sign}`).join('; ')}.`:'No major stelliums.';
+  const sunSign=signOf(chart.Sun).name,moonSign=signOf(chart.Moon).name,ascSign=signOf(chart.ASC).name,mcSign=signOf(chart.MC).name;
+
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','x-api-key':'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'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        messages:[{role:'user',content:`You are a masterful, philosophically erudite astrologer. Provide a natal chart reading for ${birthData.name}, born ${formData.date} at ${birthData.localTime} local time in ${birthData.city}.
+
+Calculated natal positions (Tropical, Placidus):
+${placements}
+
+Key signatures:
+- Sun in ${sunSign}, Moon in ${moonSign}, ${ascSign} Rising
+- MC in ${mcSign}
+- ${stelliumNote}
+
+Provide a reading of 450–550 words that:
+1. Opens with the single most architecturally significant feature of this chart
+2. Reads the Sun/Moon/Rising trinity
+3. Interprets the MC and what it suggests about vocation and legacy
+4. Identifies one significant tension in the chart
+5. Speaks to the overall quality of this life's orientation — not predictions, but nature
+6. Ends with one unflinching observation that a lesser reader would omit
+
+Tone: erudite, unadorned. No bullet points. Flowing paragraphs. No flattery. Speak directly using "you."`}]
+      })
+    });
+    const data=await res.json();
+    reading=data.content?.map(b=>b.text||'').join('')||'Reading unavailable.';
+  } catch(e){
+    reading='The connection to the interpreter was lost. Please try again.';
+  }
+
+  el.innerHTML=`<div class="reading-text">${reading}</div>`;
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
