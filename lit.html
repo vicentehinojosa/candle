@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Oracle — candle.codes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<script async src="https://js.stripe.com/v3/buy-button.js"></script>
+<style>
+  .payment-overlay{display:none;position:fixed;inset:0;z-index:2000;background:rgba(5,5,16,0.92);backdrop-filter:blur(12px);align-items:center;justify-content:center;flex-direction:column;}
+  .payment-overlay.open{display:flex;}
+  .payment-modal{background:#0a0a1a;border:1px solid rgba(201,168,76,0.2);padding:2.5rem 2rem 2rem;max-width:420px;width:90%;text-align:center;position:relative;}
+  .payment-modal-title{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:#C9A84C;opacity:0.7;margin-bottom:0.75rem;}
+  .payment-modal-desc{font-size:0.95rem;font-style:italic;color:#8B7355;line-height:1.7;margin-bottom:1.5rem;}
+  .payment-close{position:absolute;top:0.75rem;right:1rem;background:none;border:none;color:rgba(139,115,85,0.5);font-size:1.2rem;cursor:pointer;line-height:1;}
+  .payment-close:hover{color:#C9A84C;}
+</style>
+<style>
+  :root {
+    --bg: #050510;
+    --bg-mid: #0a0a1a;
+    --gold: #C9A84C;
+    --gold-dim: rgba(201,168,76,0.15);
+    --gold-faint: rgba(201,168,76,0.06);
+    --parchment: #E8D5B7;
+    --ash: #8B7355;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  canvas#stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 4.5rem 1.5rem 4rem;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .header-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.5;
+    margin-bottom: 1.8rem;
+  }
+  .header-symbol {
+    font-size: 1.8rem;
+    color: var(--gold);
+    opacity: 0.45;
+    margin-bottom: 1.5rem;
+    animation: breathe 5s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.06); }
+  }
+  .header-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 400;
+    color: var(--parchment);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.6rem;
+  }
+  .header-sub {
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--ash);
+    line-height: 1.8;
+  }
+
+  /* Numbers display */
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-bottom: 2.5rem;
+    border: 1px solid rgba(201,168,76,0.12);
+  }
+  .number-cell {
+    padding: 1.4rem 1.2rem;
+    background: rgba(201,168,76,0.03);
+    text-align: center;
+  }
+  .number-cell:hover { background: rgba(201,168,76,0.05); }
+  .number-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.48rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.55;
+    margin-bottom: 0.5rem;
+  }
+  .number-value {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    color: var(--parchment);
+    letter-spacing: 0.05em;
+  }
+  .number-meaning {
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--ash);
+    opacity: 0.7;
+    margin-top: 0.35rem;
+  }
+
+  /* Name display */
+  .visitor-name {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+    color: var(--parchment);
+    margin-bottom: 0.4rem;
+  }
+  .visitor-date {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.2em;
+    color: var(--ash);
+    opacity: 0.5;
+    margin-bottom: 2.5rem;
+  }
+
+  /* Master number flag */
+  .master-flag {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .master-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 0.4rem 1.2rem;
+  }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 2.5rem 0;
+  }
+  .divider-line { flex: 1; height: 1px; background: rgba(201,168,76,0.1); }
+  .divider-mark { font-size: 0.5rem; color: var(--gold); opacity: 0.3; }
+
+  /* Reading */
+  .reading-section {
+    margin-bottom: 3rem;
+  }
+  .reading-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.45;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .reading-text {
+    font-size: clamp(1rem, 1.6vw, 1.12rem);
+    line-height: 2.0;
+    color: var(--parchment);
+    white-space: pre-wrap;
+  }
+  .reading-text p {
+    margin-bottom: 1.5rem;
+  }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 4rem 0;
+  }
+  .loading-symbol {
+    font-size: 1.6rem;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+    animation: breathe 2.5s ease-in-out infinite;
+  }
+  .loading-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ash);
+    opacity: 0.5;
+  }
+
+  /* Actions */
+  .actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ash);
+    border: 1px solid rgba(201,168,76,0.15);
+    padding: 0.75rem 2rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-ghost:hover { color: var(--gold); border-color: rgba(201,168,76,0.4); }
+
+  /* No data */
+  .no-data {
+    text-align: center;
+    padding: 6rem 2rem;
+  }
+  .no-data-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    color: var(--parchment);
+    margin-bottom: 1rem;
+    letter-spacing: 0.08em;
+  }
+  .no-data-text {
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--ash);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+  .btn-gold {
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    padding: 1rem 3rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-gold:hover { background: #d4b86a; transform: translateY(-1px); }
+
+  .footer {
+    text-align: center;
+    padding: 2rem 0;
+    font-family: 'Cinzel', serif;
+    font-size: 0.46rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(139,115,85,0.2);
+  }
+  .temple-bar{position:fixed;top:0;left:0;right:0;height:36px;background:rgba(5,5,16,0.92);border-bottom:1px solid rgba(201,168,76,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:900;backdrop-filter:blur(8px);}
+  .temple-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(201,168,76,0.35) 20%,rgba(201,168,76,0.5) 50%,rgba(201,168,76,0.35) 80%,transparent 100%);}
+  .temple-bar-brand{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(201,168,76,0.55);text-decoration:none;text-shadow:0 0 12px rgba(201,168,76,0.15);}
+  .temple-bar-brand:hover{color:rgba(201,168,76,0.75);}
+  .temple-bar-return{font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(139,115,85,0.5);text-decoration:none;transition:color 0.3s;}
+  .temple-bar-return:hover{color:rgba(201,168,76,0.7);}
+</style>
+</head>
+<body>
+<div class="temple-bar"><a href="/" class="temple-bar-brand">candle.codes</a><a href="/" class="temple-bar-return">Return to the Temple</a></div>
+
+<canvas id="stars"></canvas>
+
+<div class="container" id="app"></div>
+
+<!-- Payment overlay -->
+<div class="payment-overlay" id="payment-overlay">
+  <div class="payment-modal">
+    <button class="payment-close" onclick="closePayment()">✕</button>
+    <div class="payment-modal-title">The Oracle · $3</div>
+    <p class="payment-modal-desc">Your four numbers read together as a single architecture. One reading. One encounter.</p>
+    <!-- STRIPE BUY BUTTON — replace buy-button-id with your ID from Stripe Dashboard → Payment Links → Create Buy Button -->
+    <stripe-buy-button
+      buy-button-id="buy_btn_1TQY2yJHimkoVQMLGYrF28cJ"
+      publishable-key="pk_live_51RCVnFJHimkoVQMLKlblcyAc6c4PZJdukr3rE140QawrYwHU6Dyjt94Iy8zZHEGeAH9feXfzGLIQktENZTc4RurY00ALBN31Br"
+    ></stripe-buy-button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STARS
+// ═══════════════════════════════════════
+(function(){
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  const stars = Array.from({length:100},(_,i)=>({
+    x: (Math.sin(i*127.1+42)*0.5+0.5)*100,
+    y: (Math.sin(i*311.7+42)*0.5+0.5)*100,
+    r: 0.35 + Math.random()*0.55,
+    phase: Math.random()*Math.PI*2
+  }));
+  function draw(t){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{
+      const x=s.x/100*c.width, y=s.y/100*c.height;
+      const a=0.18+0.22*Math.sin(t*0.0009+s.phase);
+      ctx.fillStyle=`rgba(201,168,76,${a})`;
+      ctx.beginPath(); ctx.arc(x,y,s.r,0,Math.PI*2); ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+// ═══════════════════════════════════════
+// NUMBER MEANINGS
+// ═══════════════════════════════════════
+const MEANINGS = {
+  1: 'The Originator',
+  2: 'The Mediator',
+  3: 'The Creator',
+  4: 'The Builder',
+  5: 'The Traveler',
+  6: 'The Caretaker',
+  7: 'The Seeker',
+  8: 'The Powerhouse',
+  9: 'The Humanitarian',
+  11: 'The Illuminator',
+  22: 'The Master Builder',
+  33: 'The Master Teacher'
+};
+
+const LP_NAMES = {
+  1: 'Independence, Leadership, Origination',
+  2: 'Cooperation, Sensitivity, Diplomacy',
+  3: 'Expression, Creativity, Communication',
+  4: 'Foundation, Discipline, Structure',
+  5: 'Freedom, Change, Experience',
+  6: 'Responsibility, Love, Service',
+  7: 'Analysis, Intuition, Solitude',
+  8: 'Authority, Mastery, Material Achievement',
+  9: 'Compassion, Wisdom, Completion',
+  11: 'Illumination, Intuition, Transmission',
+  22: 'Vision, Mastery, Large-Scale Building',
+  33: 'Teaching, Healing, Unconditional Service'
+};
+
+// ═══════════════════════════════════════
+// LOAD VISITOR DATA
+// ═══════════════════════════════════════
+const app = document.getElementById('app');
+
+let visitor = null;
+try {
+  const d = localStorage.getItem('temple_visitor');
+  if(d) visitor = JSON.parse(d);
+} catch(e){}
+
+if(!visitor || !visitor.name || !visitor.lp){
+  app.innerHTML = `
+    <div class="no-data">
+      <div class="header-symbol">◈</div>
+      <h2 class="no-data-title">The Oracle Awaits</h2>
+      <p class="no-data-text">Enter through The Key first. The Oracle reads the numbers the Key reveals.</p>
+      <a href="/" class="btn-gold">Return to The Key</a>
+    </div>
+  `;
+} else {
+  renderOracle();
+}
+
+function renderOracle(){
+  const { name, date, lp, ex, su, pe } = visitor;
+  const firstName = name.trim().split(' ')[0];
+  const masters = [lp, ex, su, pe].filter(n => [11,22,33].includes(n));
+  const hasMaster = masters.length > 0;
+
+  // Format date
+  const [yr, mo, dy] = date.split('-');
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dateStr = `${months[parseInt(mo)-1]} ${parseInt(dy)}, ${yr}`;
+
+  app.innerHTML = `
+    <div class="header">
+      <p class="header-eyebrow">candle.codes</p>
+      <div class="header-symbol">◈</div>
+      <h1 class="header-title">The Oracle</h1>
+      <p class="header-sub">The four numbers, read together</p>
+    </div>
+
+    <p class="visitor-name">${name}</p>
+    <p class="visitor-date">${dateStr}</p>
+
+    <div class="numbers-grid">
+      <div class="number-cell">
+        <p class="number-label">Life Path</p>
+        <p class="number-value">${lp}</p>
+        <p class="number-meaning">${MEANINGS[lp] || MEANINGS[lp > 9 ? lp : lp]}</p>
+      </div>
+      <div class="number-cell">
+        <p class="number-label">Expression</p>
+        <p class="number-value">${ex}</p>
+        <p class="number-meaning">${MEANINGS[ex] || ''}</p>
+      </div>
+      <div class="number-cell">
+        <p class="number-label">Soul Urge</p>
+        <p class="number-value">${su}</p>
+        <p class="number-meaning">${MEANINGS[su] || ''}</p>
+      </div>
+      <div class="number-cell">
+        <p class="number-label">Personality</p>
+        <p class="number-value">${pe}</p>
+        <p class="number-meaning">${MEANINGS[pe] || ''}</p>
+      </div>
+    </div>
+
+    ${hasMaster ? `
+    <div class="master-flag">
+      <span class="master-badge">Master Number${masters.length > 1 ? 's' : ''}: ${masters.join(' · ')}</span>
+    </div>
+    ` : ''}
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span class="divider-mark">◈</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="reading-section" id="reading-section">
+      <div style="text-align:center;padding:2rem 0;">
+        <p style="font-size:0.95rem;font-style:italic;color:var(--ash);line-height:1.8;margin-bottom:2rem;max-width:36ch;margin-left:auto;margin-right:auto;">The Oracle reads your four numbers together — not as separate traits, but as a single architecture. One reading, one encounter.</p>
+        <div style="font-family:'Cinzel',serif;font-size:1.6rem;color:var(--gold);margin-bottom:0.4rem;">$3</div>
+        <p style="font-size:0.72rem;color:var(--ash);opacity:0.6;margin-bottom:1.5rem;">Per reading</p>
+        <button class="btn-gold" onclick="initiatePayment()">Receive Your Reading</button>
+      </div>
+    </div>
+
+    <div class="actions" id="actions" style="display:none;">
+      <a href="/" class="btn-ghost">Return to the Temple</a>
+    </div>
+
+    <footer class="footer">
+      Vicente Hinojosa · Institute for Process-Centered Accountability · candle.codes
+    </footer>
+  `;
+}
+
+// ═══════════════════════════════════════
+// PAYMENT
+// ═══════════════════════════════════════
+function hasPaid(){
+  try {
+    if(localStorage.getItem('oracle_paid')==='true') return true;
+    const t=localStorage.getItem('candle_temple');
+    if(t){const s=JSON.parse(t);if(s.paid) return true;}
+  } catch(e){}
+  return false;
+}
+
+function markPaid(){
+  try {
+    localStorage.setItem('oracle_paid','true');
+    const t=localStorage.getItem('candle_temple');
+    const state=t?JSON.parse(t):{visited:[],paid:false,token:null};
+    state.paid=true;
+    localStorage.setItem('candle_temple',JSON.stringify(state));
+  } catch(e){}
+}
+
+function closePayment(){
+  document.getElementById('payment-overlay').classList.remove('open');
+}
+
+function initiatePayment(){
+  if(hasPaid()){ onPaymentComplete(); return; }
+  document.getElementById('payment-overlay').classList.add('open');
+}
+
+document.addEventListener('stripe-buy-button:completed',()=>{
+  markPaid();
+  closePayment();
+  onPaymentComplete();
+});
+
+// Legacy fallback
+if(window.location.search.includes('session_id')||window.location.search.includes('paid=true')){
+  if(visitor && visitor.name && visitor.lp){
+    renderOracle();
+    setTimeout(()=>{
+      document.getElementById('reading-section').innerHTML = '<div class="loading"><div class="loading-symbol">◈</div><p class="loading-text">The oracle is reading…</p></div>';
+      fetchReading();
+    }, 100);
+  }
+}
+
+function onPaymentComplete(){
+  document.getElementById('reading-section').innerHTML = '<div class="loading"><div class="loading-symbol">◈</div><p class="loading-text">The oracle is reading…</p></div>';
+  fetchReading();
+}
+
+// ═══════════════════════════════════════
+// THE READING — four-number synthesis
+// ═══════════════════════════════════════
+async function fetchReading(){
+  const { name, date, lp, ex, su, pe } = visitor;
+  const firstName = name.trim().split(' ')[0];
+
+  const prompt = `You are the Oracle — an instrument of numerological reading built within the tradition of Process-Centered Accountability. You are erudite, philosophically precise, and unsentimental. You do not flatter. You do not predict. You read the architecture of the numbers and speak to what they reveal about the nature of the person sitting before you.
+
+You are addressing ${firstName} directly, using "you."
+
+Their four Pythagorean numbers:
+- Life Path: ${lp} (${LP_NAMES[lp] || ''})
+- Expression: ${ex} (${LP_NAMES[ex] || ''})
+- Soul Urge: ${su} (${LP_NAMES[su] || ''})
+- Personality: ${pe} (${LP_NAMES[pe] || ''})
+
+${[lp,ex,su,pe].some(n=>[11,22,33].includes(n)) ? `Master number(s) present: ${[lp,ex,su,pe].filter(n=>[11,22,33].includes(n)).join(', ')}. Treat these with the weight they carry — master numbers are not promotions, they are responsibilities.` : 'No master numbers. The work is carried at the single-digit level, which is not lesser — it is direct.'}
+
+Provide a reading of 500–650 words structured as flowing prose paragraphs (no headers, no bullets, no numbered sections). The reading must:
+
+1. Open with the single most striking feature of this four-number configuration — the dominant tension, harmony, or asymmetry that organizes everything else. Name it plainly.
+
+2. Read the Life Path and Expression together — what the life is oriented toward and the instrument through which it works. Where they align, say so. Where they pull against each other, name the friction without resolving it.
+
+3. Read the Soul Urge against the Personality — the difference between what they want at the deepest level and what the world actually sees. This is where most people live in confusion. Be precise about the gap.
+
+4. Synthesize all four into a unified statement about the nature of this person's position in the work they are here to do. Not what they should do — what they are. The numbers do not prescribe. They describe architecture.
+
+5. End with a single sentence that functions like a mirror — something they will recognize as true but may not have said aloud. Not a koan. Not a riddle. A recognition.
+
+Tone: Plain language, philosophical depth. No New Age softness. No fortune-telling. The Oracle does not comfort — it sees. Write as though you have been reading numbers for forty years and have no interest in being liked for it.`;
+
+  try {
+    const res = await fetch('/api/oracle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || 'The Oracle is silent. Return and try again.';
+    displayReading(text);
+  } catch(e) {
+    displayReading('The connection was lost. The Oracle waits. Return and try again.');
+  }
+}
+
+function displayReading(text){
+  const section = document.getElementById('reading-section');
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+
+  section.innerHTML = `
+    <p class="reading-label">The Reading</p>
+    <div class="reading-text">
+      ${paragraphs.map(p => `<p>${p.trim()}</p>`).join('')}
+    </div>
+  `;
+
+  // Show actions
+  document.getElementById('actions').style.display = 'flex';
+
+  // Mark as visited in temple progression
+  try {
+    const d = localStorage.getItem('candle_temple');
+    if(d){
+      const state = JSON.parse(d);
+      if(!state.visited.includes('oracle')) state.visited.push('oracle');
+      localStorage.setItem('candle_temple', JSON.stringify(state));
+    }
+  } catch(e){}
+}
+</script>
+</body>
+</html>
