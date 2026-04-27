@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The I Ching — candle.codes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<script async src="https://js.stripe.com/v3/buy-button.js"></script>
+<style>
+  /* Payment overlay */
+  .payment-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(5,5,16,0.92);
+    backdrop-filter: blur(12px);
+    align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  .payment-overlay.open { display: flex; }
+  .payment-modal {
+    background: #0a0a1a;
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 2.5rem 2rem 2rem;
+    max-width: 420px; width: 90%;
+    text-align: center;
+    position: relative;
+  }
+  .payment-modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--gold);
+    opacity: 0.7; margin-bottom: 0.75rem;
+  }
+  .payment-modal-desc {
+    font-size: 0.95rem; font-style: italic;
+    color: #8B7355; line-height: 1.7;
+    margin-bottom: 1.5rem;
+  }
+  .payment-close {
+    position: absolute; top: 0.75rem; right: 1rem;
+    background: none; border: none;
+    color: rgba(139,115,85,0.5); font-size: 1.2rem;
+    cursor: pointer; line-height: 1;
+  }
+  .payment-close:hover { color: var(--gold); }
+</style>
+<style>
+  :root {
+    --bg: #050510;
+    --gold: #C9A84C;
+    --parchment: #E8D5B7;
+    --ash: #8B7355;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(180deg,#06060f 0%,#0a0a1a 100%);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 1000; opacity: 0.6;
+  }
+  .container {
+    position: relative; z-index: 1;
+    max-width: 480px; width: 100%;
+    margin: 0 auto; padding: 60px 16px 24px;
+  }
+  .header { text-align: center; margin-bottom: 28px; }
+  .eyebrow {
+    font-family: 'Cinzel', serif; font-size: 8px;
+    letter-spacing: 6px; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  h1 {
+    font-family: 'Cinzel', serif; font-size: 20px;
+    font-weight: 400; color: var(--parchment);
+    letter-spacing: 2px; margin: 0 0 6px;
+  }
+  .subtitle { font-size: 13px; color: #6B5B45; font-style: italic; margin: 0; }
+
+  /* Question */
+  .question-section { margin-bottom: 24px; }
+  .q-label {
+    font-family: 'Cinzel', serif; font-size: 9px;
+    letter-spacing: 3px; color: var(--ash);
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  textarea {
+    width: 100%; background: rgba(201,168,76,0.05);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--parchment); font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; padding: 12px; resize: none;
+    outline: none; box-sizing: border-box; line-height: 1.6;
+  }
+  textarea:focus { border-color: rgba(201,168,76,0.4); }
+  textarea::placeholder { color: rgba(232,213,183,0.2); font-style: italic; }
+
+  .btn-cast {
+    margin-top: 12px; width: 100%; padding: 14px;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid var(--gold);
+    color: var(--gold); font-family: 'Cinzel', serif;
+    font-size: 10px; letter-spacing: 4px;
+    text-transform: uppercase; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-cast:hover { background: rgba(201,168,76,0.18); }
+
+  /* Hexagram display */
+  .hex-display {
+    display: flex; justify-content: center; gap: 40px;
+    margin-bottom: 24px; padding: 24px;
+    background: rgba(201,168,76,0.04);
+    border: 1px solid rgba(201,168,76,0.15);
+  }
+  .hex-col { text-align: center; }
+  .hex-label {
+    margin-top: 12px; font-family: 'Cinzel', serif;
+    font-size: 9px; letter-spacing: 2px; color: var(--gold);
+  }
+  .hex-label-dim { color: var(--ash); }
+  .hex-arrow { display: flex; align-items: center; color: rgba(201,168,76,0.4); font-size: 18px; }
+
+  .line-row { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; }
+  .line-solid { width: 64px; height: 8px; border-radius: 1px; }
+  .line-broken { display: flex; gap: 6px; }
+  .line-half { width: 28px; height: 8px; border-radius: 1px; }
+  .line-normal { background: var(--gold); }
+  .line-changing { background: #FC8181; }
+  .line-mark { font-size: 9px; color: #FC8181; margin-left: 4px; }
+
+  /* Judgment */
+  .judgment {
+    padding: 16px; margin-bottom: 20px;
+    border-left: 2px solid rgba(201,168,76,0.4);
+    background: rgba(201,168,76,0.03);
+  }
+  .judgment-label {
+    font-family: 'Cinzel', serif; font-size: 8px;
+    letter-spacing: 3px; color: #6B5B45;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .judgment-text {
+    font-style: italic; font-size: 14px;
+    color: #C4A882; line-height: 1.75;
+  }
+
+  /* Reading */
+  .reading {
+    line-height: 1.85; font-size: 15px;
+    color: #D4C4A8; margin-bottom: 28px;
+    white-space: pre-wrap;
+  }
+
+  /* Loading */
+  .loading { text-align: center; padding: 40px 0; }
+  .loading-symbol { font-size: 24px; color: var(--gold); margin-bottom: 12px; }
+  .loading-text {
+    font-family: 'Cinzel', serif; font-size: 8px;
+    letter-spacing: 4px; color: #4B3B2B; text-transform: uppercase;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-symbol { animation: spin 3s linear infinite; }
+
+  /* Cast again */
+  .btn-again {
+    width: 100%; padding: 12px;
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.3);
+    color: #6B5B45; font-family: 'Cinzel', serif;
+    font-size: 9px; letter-spacing: 4px;
+    text-transform: uppercase; cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .btn-again:hover { color: var(--gold); border-color: rgba(201,168,76,0.5); }
+
+  .btn-return {
+    width: 100%; padding: 12px;
+    background: transparent; border: none;
+    color: #3B3020; font-family: 'Cinzel', serif;
+    font-size: 9px; letter-spacing: 3px;
+    text-transform: uppercase; cursor: pointer;
+    text-decoration: none; display: block; text-align: center;
+  }
+  .btn-return:hover { color: var(--ash); }
+
+  .footer {
+    text-align: center; font-size: 10px;
+    color: #2B2018; font-family: 'Cinzel', serif;
+    letter-spacing: 1px; margin-top: 16px;
+  }
+  .temple-bar{position:fixed;top:0;left:0;right:0;height:36px;background:rgba(5,5,16,0.92);border-bottom:1px solid rgba(201,168,76,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:900;backdrop-filter:blur(8px);}
+  .temple-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(201,168,76,0.35) 20%,rgba(201,168,76,0.5) 50%,rgba(201,168,76,0.35) 80%,transparent 100%);}
+  .temple-bar-brand{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(201,168,76,0.55);text-decoration:none;text-shadow:0 0 12px rgba(201,168,76,0.15);}
+  .temple-bar-brand:hover{color:rgba(201,168,76,0.75);}
+  .temple-bar-return{font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(139,115,85,0.5);text-decoration:none;transition:color 0.3s;}
+  .temple-bar-return:hover{color:rgba(201,168,76,0.7);}
+</style>
+</head>
+<body>
+<div class="temple-bar"><a href="/" class="temple-bar-brand">candle.codes</a><a href="/" class="temple-bar-return">Return to the Temple</a></div>
+<div class="container" id="app">
+  <div class="header">
+    <div class="eyebrow">Yì Jīng · 易經</div>
+    <h1>The Book of Changes</h1>
+    <p class="subtitle">Three coins · Six lines · One moment</p>
+  </div>
+
+  <div id="question-panel">
+    <div class="question-section">
+      <div class="q-label">Hold a question, or cast in silence</div>
+      <textarea id="question" rows="3" placeholder="Enter your question, or leave empty…"></textarea>
+      <button class="btn-cast" id="cast-btn" onclick="initiatePayment()">Cast the Coins — $6</button>
+    </div>
+  </div>
+
+  <div id="result-panel" style="display:none;"></div>
+</div>
+
+<!-- Payment overlay -->
+<div class="payment-overlay" id="payment-overlay">
+  <div class="payment-modal">
+    <button class="payment-close" onclick="closePayment()">✕</button>
+    <div class="payment-modal-title">The I Ching · $6</div>
+    <p class="payment-modal-desc">One cast. The sixty-four hexagrams, read in real time against your question.</p>
+    <!-- STRIPE BUY BUTTON — replace buy-button-id with your ID from Stripe Dashboard → Payment Links → Create Buy Button -->
+    <stripe-buy-button
+      id="stripe-btn-iching"
+      buy-button-id="buy_btn_1TQY6pJHimkoVQMLZYulzOS1"
+      publishable-key="pk_live_51RCVnFJHimkoVQMLKlblcyAc6c4PZJdukr3rE140QawrYwHU6Dyjt94Iy8zZHEGeAH9feXfzGLIQktENZTc4RurY00ALBN31Br"
+    ></stripe-buy-button>
+  </div>
+</div>
+
+<script>
+function initiatePayment(){
+  document.getElementById('payment-overlay').classList.add('open');
+}
+
+function closePayment(){
+  document.getElementById('payment-overlay').classList.remove('open');
+}
+
+document.addEventListener('stripe-buy-button:completed',()=>{
+  closePayment();
+  castCoins();
+});
+// ═══════════════════════════════════════
+// I CHING DATA
+// ═══════════════════════════════════════
+const TRIGRAMS = {
+  '111':{name:'Heaven',symbol:'☰'}, '000':{name:'Earth',symbol:'☷'},
+  '100':{name:'Thunder',symbol:'☳'}, '001':{name:'Mountain',symbol:'☶'},
+  '010':{name:'Water',symbol:'☵'}, '101':{name:'Fire',symbol:'☲'},
+  '110':{name:'Wind',symbol:'☴'}, '011':{name:'Lake',symbol:'☱'},
+};
+
+const HEXAGRAMS = [
+  [1,"The Creative","Sublime success through perseverance. Heaven moves with ceaseless power."],
+  [2,"The Receptive","Supreme success through acceptance. Earth carries all things without exhaustion."],
+  [3,"Difficulty at the Beginning","Clouds and thunder — the chaos before form. Do not act rashly; gather strength."],
+  [4,"Youthful Folly","It is not I who seeks the young fool — the young fool seeks me."],
+  [5,"Waiting","Rain will come. Do not force the river. Sincerity brings light even in the waiting."],
+  [6,"Conflict","You are sincere, but you meet opposition. Seek the middle way."],
+  [7,"The Army","The army requires discipline and a just leader. Strength without righteousness destroys."],
+  [8,"Holding Together","Union. Re-examine yourself — are you central enough to unite others?"],
+  [9,"The Taming Power of the Small","Dense clouds but no rain. Small forces accumulate. Not the time for great action."],
+  [10,"Treading","You tread on the tiger's tail and it does not bite. Careful conduct through dangerous ground."],
+  [11,"Peace","Heaven and earth commune. The small departs, the great approaches."],
+  [12,"Standstill","Heaven and earth do not commune. The great departs, the small approaches. Withdraw inward."],
+  [13,"Fellowship","Fellowship with people in the open. Only in the wilderness can great undertakings succeed."],
+  [14,"Great Possession","Fire in heaven — the sage does not impede what is luminous."],
+  [15,"Modesty","The mountain bows within the earth. Modesty is the path the superior person walks faithfully."],
+  [16,"Enthusiasm","Thunder rising from the earth — the ancient kings made music and honored merit."],
+  [17,"Following","There is great success in following. Follow the season; do not be rigid."],
+  [18,"Work on the Decayed","What has been spoiled can be made good again."],
+  [19,"Approach","The great approaches. By the eighth month there will be misfortune — heed the turn."],
+  [20,"Contemplation","The ablution has been made but not yet the offering. Full of sincerity they look up."],
+  [21,"Biting Through","Success. It furthers one to let justice be administered."],
+  [22,"Grace","Grace. Success in small matters. The heart must not be diverted by beauty alone."],
+  [23,"Splitting Apart","It does not further one to go anywhere. The roof beam breaks."],
+  [24,"Return","Success. Coming and going without fault. Return to the way after seven days."],
+  [25,"Innocence","Supreme success through innocence."],
+  [26,"The Taming Power of the Great","Perseverance furthers. Not eating at home brings good fortune."],
+  [27,"Corners of the Mouth","Perseverance brings good fortune. Pay attention to your nourishment."],
+  [28,"Preponderance of the Great","The ridgepole sags. It furthers to have somewhere to go. Success."],
+  [29,"The Abysmal","The abyss repeated. Danger. If you are sincere, the heart penetrates even the abyss."],
+  [30,"The Clinging","Perseverance furthers. Taking care of the cow brings good fortune."],
+  [31,"Influence","Success. Perseverance furthers. To take a maiden to wife brings good fortune."],
+  [32,"Duration","Success. No blame. Perseverance furthers."],
+  [33,"Retreat","Success. In small matters, perseverance furthers."],
+  [34,"Power of the Great","Perseverance furthers. Do not use power recklessly."],
+  [35,"Progress","The powerful prince is honored with audience three times in a single day."],
+  [36,"Darkening of the Light","In adversity it furthers to be persevering. Hide your light."],
+  [37,"The Family","Perseverance of the woman furthers. The family is the cell of civilization."],
+  [38,"Opposition","In small matters, good fortune."],
+  [39,"Obstruction","The southwest furthers. The northeast does not. See the great person."],
+  [40,"Deliverance","The southwest furthers. Turning back brings good fortune."],
+  [41,"Decrease","Decrease combined with sincerity brings supreme good fortune."],
+  [42,"Increase","It furthers to undertake something. It furthers to cross the great water."],
+  [43,"Breakthrough","One must resolutely make the matter known."],
+  [44,"Coming to Meet","The woman is bold. Do not marry such a woman."],
+  [45,"Gathering Together","Success. The king approaches his temple."],
+  [46,"Pushing Upward","Supreme success. One must see the great person."],
+  [47,"Oppression","Success. Perseverance. The great person brings about good fortune."],
+  [48,"The Well","The town may be changed but the well cannot. It never runs dry."],
+  [49,"Revolution","On your own day you are believed. Supreme success."],
+  [50,"The Cauldron","Supreme good fortune. The vessel holds the transformation."],
+  [51,"The Arousing","Shock brings success. The superior person laughs."],
+  [52,"Keeping Still","Keeping the back still so that you no longer feel the body."],
+  [53,"Development","The maiden is given in marriage. Good fortune. Gradual development."],
+  [54,"The Marrying Maiden","Undertakings bring misfortune. Nothing that would further."],
+  [55,"Abundance","Success. The king attains abundance. Be not sad — be like the sun at midday."],
+  [56,"The Wanderer","Success through small things. Perseverance brings good fortune to the wanderer."],
+  [57,"The Gentle","Success through small means. It furthers to see the great person."],
+  [58,"The Joyous","Success. Perseverance is favorable. Joy shared is joy multiplied."],
+  [59,"Dispersion","Success. The king approaches his temple. Cross the great water."],
+  [60,"Limitation","Success. Galling limitation must not be persevered in."],
+  [61,"Inner Truth","Pigs and fishes. Good fortune. It furthers to cross the great water."],
+  [62,"Preponderance of the Small","Success. Perseverance furthers. For small matters, not great ones."],
+  [63,"After Completion","Success in small matters. In the beginning good fortune; in the end disorder."],
+  [64,"Before Completion","Success. But if the little fox gets its tail wet — nothing that would further."],
+];
+
+const LINE_TYPES = {6:'Old Yin',7:'Young Yang',8:'Young Yin',9:'Old Yang'};
+
+// King Wen lookup
+const TRIGRAM_ORDER = ['111','100','010','110','001','101','011','000'];
+const KW_TABLE = [
+  [1,34,5,26,11,9,14,43],[25,51,3,27,24,42,21,17],
+  [6,40,29,4,7,59,64,47],[33,62,39,52,15,53,56,31],
+  [12,16,8,23,2,20,35,45],[44,32,48,18,46,57,50,28],
+  [13,55,63,22,36,37,30,49],[10,54,60,41,19,61,38,58],
+];
+
+function hexToNumber(lines){
+  const u = TRIGRAM_ORDER.indexOf(lines.slice(0,3).join(''));
+  const l = TRIGRAM_ORDER.indexOf(lines.slice(3,6).join(''));
+  return KW_TABLE[u]?.[l] ?? 1;
+}
+
+function throwCoin(){
+  const coins = [Math.random()<0.5?3:2, Math.random()<0.5?3:2, Math.random()<0.5?3:2];
+  return coins.reduce((a,b)=>a+b,0);
+}
+
+function castHexagram(){
+  const throws = Array.from({length:6}, throwCoin);
+  const lines = throws.map(v => v===7||v===9 ? '1' : '0');
+  const changing = throws.map(v => v===6||v===9);
+  const transformed = lines.map((l,i) => changing[i] ? (l==='1'?'0':'1') : l);
+  return { lines, changing, transformed, throws };
+}
+
+// Get visitor name
+let visitorName = '';
+try {
+  const d = localStorage.getItem('temple_visitor');
+  if(d){ const p = JSON.parse(d); visitorName = p.name || ''; }
+} catch(e){}
+
+// ═══════════════════════════════════════
+// CAST
+// ═══════════════════════════════════════
+function castCoins(){
+  const question = document.getElementById('question').value.trim();
+  const result = castHexagram();
+
+  const hexNum = hexToNumber(result.lines);
+  const hexData = HEXAGRAMS[hexNum - 1];
+  const hexTransNum = hexToNumber(result.transformed);
+  const hexTransData = HEXAGRAMS[hexTransNum - 1];
+  const hasChanging = result.changing.some(Boolean);
+
+  const upper = TRIGRAMS[result.lines.slice(0,3).join('')]?.name || '';
+  const lower = TRIGRAMS[result.lines.slice(3,6).join('')]?.name || '';
+
+  // Hide question panel
+  document.getElementById('question-panel').style.display = 'none';
+
+  // Build hexagram lines HTML
+  function renderLines(lines, changing){
+    let html = '';
+    const reversed = [...lines].map((l,i) => ({l, c: changing ? changing[i] : false})).reverse();
+    reversed.forEach(({l, c}) => {
+      const cls = c ? 'line-changing' : 'line-normal';
+      if(l === '1'){
+        html += `<div class="line-row"><div class="line-solid ${cls}"></div>${c ? '<span class="line-mark">✕</span>' : ''}</div>`;
+      } else {
+        html += `<div class="line-row"><div class="line-broken"><div class="line-half ${cls}"></div><div class="line-half ${cls}"></div></div>${c ? '<span class="line-mark">✕</span>' : ''}</div>`;
+      }
+    });
+    return html;
+  }
+
+  const panel = document.getElementById('result-panel');
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="hex-display">
+      <div class="hex-col">
+        ${renderLines(result.lines, result.changing)}
+        <div class="hex-label">${hexData[0]}. ${hexData[1]}</div>
+      </div>
+      ${hasChanging ? `
+        <div class="hex-arrow">→</div>
+        <div class="hex-col">
+          ${renderLines(result.transformed)}
+          <div class="hex-label hex-label-dim">${hexTransData[0]}. ${hexTransData[1]}</div>
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="judgment">
+      <div class="judgment-label">Judgment</div>
+      <p class="judgment-text">"${hexData[2]}"</p>
+    </div>
+
+    <div id="reading-area">
+      <div class="loading">
+        <div class="loading-symbol">☯</div>
+        <div class="loading-text">The oracle deliberates…</div>
+      </div>
+    </div>
+  `;
+
+  // Fetch reading
+  fetchReading(question, result, hexNum, hexData, hexTransNum, hexTransData, hasChanging, upper, lower);
+}
+
+async function fetchReading(question, result, hexNum, hexData, hexTransNum, hexTransData, hasChanging, upper, lower){
+  const firstName = visitorName ? visitorName.trim().split(' ')[0] : 'the querent';
+  const addressLine = visitorName
+    ? `Address ${firstName} directly using "you."`
+    : 'Address the querent directly using "you."';
+
+  const prompt = `You are a sage interpreter of the I Ching — erudite, spare, philosophically precise. Speak as one who has sat with the text for decades. You do not comfort. You do not predict. You read the configuration and speak to what it reveals.
+
+${addressLine}
+
+${question ? `The question brought to the oracle: "${question}"` : 'The coins were cast without a fixed question — seeking general counsel.'}
+
+Cast result:
+Hexagram ${hexNum}: ${hexData[1]}
+Upper trigram: ${upper}, Lower trigram: ${lower}
+Judgment: "${hexData[2]}"
+${hasChanging ? `
+Changing lines at positions: ${result.changing.map((c,i)=>c?i+1:null).filter(Boolean).join(', ')} (counted from bottom)
+Line types: ${result.throws.map((v,i)=>`Line ${i+1}: ${LINE_TYPES[v]}`).join(', ')}
+
+Transforms to Hexagram ${hexTransNum}: ${hexTransData[1]}
+Transformed judgment: "${hexTransData[2]}"
+` : 'No changing lines — the situation is stable. The hexagram holds as it is.'}
+
+Provide a reading of 380–450 words that:
+1. Names the hexagram and its essential nature — what kind of moment this is
+2. Reads the specific configuration of trigrams and what they suggest in dialogue with each other
+3. If there are changing lines, interprets their movement and what the transformed hexagram reveals about where this is heading
+4. If there is a question, speaks to it with philosophical honesty — not comfort, not prediction
+5. Ends with a single sentence that functions like a koan: open, unresolvable, but precise
+
+Tone: The I Ching speaks obliquely but never vaguely. Be spare. No bullet points. Flowing paragraphs. No flattery.`;
+
+  try {
+    const res = await fetch('/api/iching', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(b=>b.text||'').join('') || 'The oracle is silent. Cast again.';
+    showReading(text);
+  } catch(e){
+    showReading('The connection failed. The oracle waits.');
+  }
+}
+
+function showReading(text){
+  document.getElementById('reading-area').innerHTML = `
+    <div class="reading">${text}</div>
+    <button class="btn-again" onclick="resetCast()">Cast Again</button>
+    <a href="/" class="btn-return">Return to the Temple</a>
+  `;
+
+  // Mark visited
+  try {
+    const d = localStorage.getItem('candle_temple');
+    if(d){
+      const state = JSON.parse(d);
+      if(!state.visited.includes('iching')) state.visited.push('iching');
+      localStorage.setItem('candle_temple', JSON.stringify(state));
+    }
+  } catch(e){}
+}
+
+function resetCast(){
+  document.getElementById('question-panel').style.display = 'block';
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('question').value = '';
+}
+</script>
+
+<div style="text-align:center;font-size:10px;color:#2B2018;font-family:'Cinzel',serif;letter-spacing:1px;margin-top:16px;position:relative;z-index:1;padding-bottom:24px;">
+  Three-coin method · King Wen sequence · 64 hexagrams
+</div>
+</body>
+</html>
