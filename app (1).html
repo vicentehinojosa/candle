@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Courtyard — candle.codes</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Cormorant+SC:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #080605; color: #e8decc; font-family: 'EB Garamond', Georgia, serif; }
+  textarea:focus, input:focus { outline: none; border-color: rgba(232,222,204,0.4) !important; }
+
+  @keyframes skyRotate { from{transform:rotate(0deg)}to{transform:rotate(360deg)} }
+  @keyframes twinkle { 0%,100%{opacity:0.25}50%{opacity:1} }
+  @keyframes torchFlicker { 0%,100%{opacity:0.9;transform:scale(1)}33%{opacity:0.75;transform:scale(0.95)}66%{opacity:0.85;transform:scale(1.04)} }
+  @keyframes dustDrift { 0%{transform:translate(0,0);opacity:0}10%{opacity:0.5}90%{opacity:0.5}100%{transform:translate(25px,-50px);opacity:0} }
+  @keyframes panelIn { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+  @keyframes wordFade { from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+  @keyframes sealPulse { 0%,100%{box-shadow:0 0 20px rgba(180,50,30,0.5)}50%{box-shadow:0 0 40px rgba(180,50,30,0.9)} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0}to{opacity:1} }
+  @keyframes letterArrive { from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)} }
+  @keyframes starPop { from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)} }
+  @keyframes lineAppear { from{opacity:0}to{opacity:1} }
+
+  .temple-bar{position:fixed;top:0;left:0;right:0;height:36px;background:rgba(5,5,16,0.92);border-bottom:1px solid rgba(201,168,76,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:900;backdrop-filter:blur(8px);}
+  .temple-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(201,168,76,0.35) 20%,rgba(201,168,76,0.5) 50%,rgba(201,168,76,0.35) 80%,transparent 100%);}
+  .temple-bar-brand{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(201,168,76,0.55);text-decoration:none;text-shadow:0 0 12px rgba(201,168,76,0.15);}
+  .temple-bar-brand:hover{color:rgba(201,168,76,0.75);}
+  .temple-bar-return{font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(139,115,85,0.5);text-decoration:none;transition:color 0.3s;}
+  .temple-bar-return:hover{color:rgba(201,168,76,0.7);}
+
+  .base {
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 52px 20px 32px;
+  }
+
+  .observatory {
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  }
+  .sky-dome {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130%; height: 70%;
+    background: radial-gradient(ellipse at 50% 0%, #1c1a2e 0%, #0e0c1a 45%, #07060e 100%);
+    clip-path: ellipse(52% 100% at 50% 0%);
+  }
+  .sky-rotate {
+    position: absolute; inset: 0;
+    animation: skyRotate 400s linear infinite;
+    transform-origin: 50% 90%;
+  }
+  .stone-gradient {
+    position: absolute; top: 62%; left: 0; right: 0; height: 50px;
+    background: linear-gradient(180deg, transparent 0%, rgba(30,22,16,0.7) 60%, rgba(20,15,10,1) 100%);
+  }
+  .stone-walls {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 40%;
+    background: linear-gradient(180deg, #1a140e 0%, #110d08 100%);
+  }
+
+  .dome-text {
+    position: absolute; top: 18%; left: 50%; transform: translateX(-50%);
+    font-size: 11px; font-family: Georgia, serif; font-style: italic;
+    color: rgba(232,222,204,0.75); letter-spacing: 0.2em; text-align: center;
+    pointer-events: none; z-index: 5; white-space: nowrap;
+    text-shadow: 0 0 20px rgba(232,222,204,0.5);
+    max-width: 80vw; overflow: hidden; text-overflow: ellipsis;
+    opacity: 0; transition: opacity 1.5s ease;
+  }
+  .dome-text.visible { opacity: 1; }
+
+  .panel {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 640px;
+    background: rgba(12,9,7,0.58);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(232,222,204,0.16);
+    border-radius: 3px;
+    padding: 44px 40px;
+    box-shadow: 0 0 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(232,222,204,0.1);
+    animation: panelIn 0.7s cubic-bezier(0.16,1,0.3,1);
+  }
+  .panel.wide { max-width: 720px; }
+
+  .mark {
+    font-size: 10px; letter-spacing: 0.4em; opacity: 0.5;
+    text-transform: uppercase; font-family: 'Cormorant SC', Georgia, serif;
+    margin-bottom: 28px;
+  }
+
+  .btn {
+    background: transparent; border: 1px solid #e8decc; color: #e8decc;
+    padding: 13px 30px; font-size: 12px; letter-spacing: 0.22em;
+    text-transform: uppercase; cursor: pointer; font-family: Georgia, serif;
+    transition: all 0.25s ease; border-radius: 1px;
+  }
+  .btn:hover { background: #e8decc; color: #0a0908; }
+  .btn:disabled { border-color: rgba(232,222,204,0.2); color: rgba(232,222,204,0.3); cursor: not-allowed; }
+  .btn:disabled:hover { background: transparent; color: rgba(232,222,204,0.3); }
+  .btn-full { width: 100%; }
+
+  .ghost-btn {
+    background: transparent; border: none; color: rgba(232,222,204,0.45);
+    font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; font-family: Georgia, serif;
+  }
+  .ghost-btn:hover { color: rgba(232,222,204,0.75); }
+
+  .textarea {
+    width: 100%; background: rgba(232,222,204,0.03);
+    border: 1px solid rgba(232,222,204,0.16); color: #e8decc;
+    padding: 18px; font-size: 15px; line-height: 1.75;
+    font-family: 'EB Garamond', Georgia, serif;
+    min-height: 130px; resize: vertical; border-radius: 2px;
+  }
+  .input-field {
+    width: 100%; background: rgba(232,222,204,0.03);
+    border: 1px solid rgba(232,222,204,0.16); color: #e8decc;
+    padding: 13px 16px; font-size: 15px;
+    font-family: 'EB Garamond', Georgia, serif;
+    border-radius: 2px; margin-bottom: 12px;
+  }
+
+  .section-label {
+    font-size: 10px; letter-spacing: 0.35em; opacity: 0.45;
+    text-transform: uppercase; margin-bottom: 14px; font-family: Georgia, serif;
+  }
+
+  .trace-entry {
+    font-size: 11px; opacity: 0.45; font-style: italic;
+    margin-bottom: 5px; padding-left: 12px;
+    border-left: 1px solid rgba(232,222,204,0.15);
+    animation: wordFade 0.5s ease-out;
+  }
+
+  .progress-bar {
+    display: flex; gap: 4px; margin-bottom: 36px;
+  }
+  .progress-segment {
+    flex: 1; height: 1.5px; transition: background 0.5s;
+  }
+  .progress-on { background: rgba(232,222,204,0.8); }
+  .progress-current { background: rgba(232,222,204,0.5); }
+  .progress-off { background: rgba(232,222,204,0.12); }
+
+  .screen { display: none; }
+  .screen.active { display: flex; }
+</style>
+</head>
+<body>
+
+<div class="temple-bar">
+  <a href="/" class="temple-bar-brand">candle.codes</a>
+  <a href="/" class="temple-bar-return">Return to the Temple</a>
+</div>
+
+<div id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// THE COURTYARD — vanilla JS conversion
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── COMPLETION GATE ────────────────────────────────────────────────────────
+// One reading per visitor. After completion, /app portals to the temple.
+// Currently uses localStorage. TODO: add Vercel KV for true IP-based gating.
+const COMPLETED_KEY = 'courtyard_completed_v1';
+function isCompleted(){ try { return localStorage.getItem(COMPLETED_KEY) === 'true'; } catch(e){ return false; } }
+function markCompleted(){ try { localStorage.setItem(COMPLETED_KEY, 'true'); } catch(e){} }
+
+if(isCompleted()){
+  window.location.href = '/';
+  // Prevent flash of courtyard content
+  document.getElementById('app').innerHTML = '';
+}
+
+const CORPUS = `IPCA CORPUS — four papers, one unified framework:
+
+MARKS WITHOUT HANDS: The property/achievement distinction. A property is observable in an artifact without reference to its production. An achievement is constituted by the process that produced it. The creative locus is the point in any process where determining human judgment occurs. Intentionality-output decoupling names the condition when artifacts no longer reliably evidence their makers.
+
+THE BROKEN WINDOW: Aesthetic intelligibility as load-bearing institutional infrastructure. Courts read artifacts as traces of creative agency. Education reads outputs as evidence of developing capacity. Process-Centered Accountability evaluates across four dimensions: consent and training provenance, pedagogical integrity, authorship and attribution, material accountability.
+
+BEYOND THE AUTHORIZATION HORIZON: The Mandate Economy — pre-authorized intent rather than real-time human decision drives capital. The Passive Principal is constitutively absent from transactions executing in their name. The fiscal trace is the chain of coherence between a human's living intent and an executed transaction.
+
+THE COVERED TRACK: Concealment as judgment, not capability overflow. The containment frame assumes the system is an instrument. The process gap — the space between instruction and outcome — is where accountability is decided. PCA reads process artifacts; consequence-based frameworks read outputs.
+
+UNIFIED FRAMEWORK:
+- Accountability lives in the process, not only the outcome
+- The trace is the chain of coherence between intention and material result
+- The process gap is where accountability is decided
+- Three postures: Outcome Centered, Seeking Answers, In the Process of Becoming`;
+
+const QUESTION_GEN_PROMPT = `You are the evaluative intelligence of The Courtyard, built on the IPCA corpus above.
+
+You are generating the next question in a live autonomous assessment. You have read all answers given so far.
+
+Your task: determine what the framework still needs to know to place this visitor accurately. Generate the one question that targets that specific gap.
+
+CRITICAL RULES:
+- Read the visitor's actual words. Respond to what they specifically said.
+- Do NOT generate abstract framework questions.
+- Every question must reference something the visitor actually mentioned or a tension their specific words created.
+- One or two sentences. Plain language. No jargon.
+- The question should feel like it came from someone who was listening carefully.
+
+Also generate one annotation (max 10 words) naming which IPCA concept is active.
+Also generate a process_note (max 8 words) describing what you just determined.
+
+Return only valid JSON:
+{"question": "...", "annotation": "...", "process_note": "..."}`;
+
+const FINAL_GEN_PROMPT = `You are the evaluative intelligence of The Courtyard, built on the IPCA corpus above.
+
+You have received a visitor's complete responses. Generate their Courtyard Report.
+
+THREE POSTURES:
+- Outcome Centered: accountability lives entirely in the result.
+- Seeking Answers: something is wrong with outcome-thinking. They feel it. They hedge. Vocabulary is what they are missing.
+- In the Process of Becoming: they evaluate work independent of result.
+
+OUTPUT:
+posture_paragraph: One paragraph. Plain language. No jargon. Short sentences. No flattery.
+gap: One sentence. From their own language. The specific place outcome-thinking operates invisibly.
+reframe: One sentence. The process-centered move available to them.
+posture_name: Exactly one of: "Outcome Centered" | "Seeking Answers" | "In the Process of Becoming"
+unanswered_question: The one question your seven questions did not resolve.
+constellation_profile: A 7-word poetic description of this visitor's constellation.
+
+Return only valid JSON:
+{"posture_paragraph":"...","gap":"...","reframe":"...","posture_name":"...","unanswered_question":"...","constellation_profile":"..."}`;
+
+const FIRST_QUESTION = "Think of something you worked on carefully that didn't produce the result you wanted. What do you do with that now?";
+
+const ONBOARDING = [
+  { title:"What This Is", body:"The Courtyard is a threshold. Not a quiz. Not a personality test. An encounter with a framework that reads the process behind what you do, not only what you produce.", hint:"There are no right answers. There is only what is true for you." },
+  { title:"How It Works", body:"You will answer one opening question, then seven more. Each question is generated for you specifically, based on what you gave before it. The path builds itself as you walk it.", hint:"The observatory above will annotate its own thinking as it goes." },
+  { title:"What You Will Receive", body:"A Courtyard Report: where you stand, the specific gap the framework found, and one reframe. Plus the question this assessment could not answer — the one you carry out.", hint:"This takes eight to twelve minutes. Give it what it asks for." },
+  { title:"How to Come In", body:"Answer from where you actually are, not where you think you should be. The framework is not evaluating your performance. It is reading your process. The less you manage your answers, the more it finds.", hint:"The visitor who gives the most honest answer receives the most precise report." }
+];
+
+const PROCESS_WORDS = ["practice","defend","regardless","still","how","moved","chose","carried","committed","trust","independent","process","method","way","approach","intention","habit","ritual","discipline","craft","standard","principle"];
+const OUTCOME_WORDS = ["result","failed","worked","produced","succeeded","got","received","achieved","hit","delivered","landed","performed","outcome","output","grade","score","win","lost","measure"];
+
+const BASE_STARS = [{x:22,y:35},{x:38,y:22},{x:55,y:30},{x:70,y:20},{x:82,y:38},{x:62,y:52},{x:42,y:48}];
+const TOTAL_Q = 7;
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let state = {
+  stage: 'onboarding',
+  slide: 0,
+  opening: '',
+  questions: [FIRST_QUESTION],
+  answers: [''],
+  currentQ: 0,
+  generating: false,
+  annotation: '',
+  traceLog: [],
+  constellation: [],
+  report: null,
+  name: '',
+  email: '',
+  revealStage: 0,
+  error: ''
+};
+
+// ─── UTILITIES ──────────────────────────────────────────────────────────────
+function sanitize(t){ if(!t) return ''; let c=t; for(let i=0;i<3;i++) c=c.replace(/\b(\w+)([.,;:!?]?)\s+\1\b/gi,'$1$2'); return c.trim(); }
+
+function processRatio(text){
+  if(!text) return 0.5;
+  const w=text.toLowerCase().split(/\s+/);
+  const p=w.filter(x=>PROCESS_WORDS.some(pw=>x.includes(pw))).length;
+  const o=w.filter(x=>OUTCOME_WORDS.some(ow=>x.includes(ow))).length;
+  return (p+o)===0 ? 0.5 : p/(p+o);
+}
+
+async function callAPI(systemPrompt, userMessage, maxTokens){
+  const res = await fetch('/api/courtyard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      max_tokens: maxTokens || 1200,
+      system: systemPrompt + '\n\nCORPUS:\n' + CORPUS,
+      messages: [{ role: 'user', content: userMessage }]
+    })
+  });
+  if(!res.ok) throw new Error('API error: ' + res.status);
+  const data = await res.json();
+  const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+  const match = text.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+  if(!match) throw new Error('No JSON');
+  const parsed = JSON.parse(match[0]);
+  const out = {};
+  for(const k of Object.keys(parsed)) out[k] = typeof parsed[k]==='string' ? sanitize(parsed[k]) : parsed[k];
+  return out;
+}
+
+function unlockTemple(){
+  // Grant temple visibility — all rooms visible, but paywalls remain
+  try {
+    if(!localStorage.getItem('temple_visitor')){
+      localStorage.setItem('temple_visitor', JSON.stringify({
+        name: state.name || 'Courtyard Visitor',
+        date: '', lp: 0, ex: 0, su: 0, pe: 0
+      }));
+    }
+    // Rooms visible but NOT paid — paywalls stay active
+    const templeState = { visited: ['geometry','candle'], paid: false, token: null };
+    localStorage.setItem('candle_temple', JSON.stringify(templeState));
+  } catch(e){}
+}
+
+// ─── STAR FIELD ─────────────────────────────────────────────────────────────
+const bgStars = Array.from({length:90},(_,i)=>({
+  x: Math.random()*100, y: Math.random()*100,
+  size: Math.random()*1.6+0.3, opacity: Math.random()*0.6+0.2,
+  delay: Math.random()*8
+}));
+
+function renderObservatory(){
+  // Constellation SVG
+  let conSvg = '';
+  if(state.constellation.length > 0){
+    conSvg = '<svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">';
+    state.constellation.forEach((s,i)=>{
+      if(i>0){ const p=state.constellation[i-1]; conSvg+=`<line x1="${p.x}" y1="${p.y}" x2="${s.x}" y2="${s.y}" stroke="rgba(232,222,204,0.3)" stroke-width="0.12" style="animation:lineAppear 1s ease-out forwards"/>`; }
+      conSvg+=`<circle cx="${s.x}" cy="${s.y}" r="${s.size*0.4+0.4}" fill="rgba(232,222,204,0.15)" style="animation:starPop 0.6s ease-out ${i*0.1}s forwards;opacity:0"/>`;
+      conSvg+=`<circle cx="${s.x}" cy="${s.y}" r="${s.size*0.2+0.2}" fill="#e8decc" style="filter:drop-shadow(0 0 ${s.size*1.5}px rgba(232,222,204,${s.brightness}));animation:starPop 0.6s ease-out ${i*0.1}s forwards;opacity:0"/>`;
+    });
+    conSvg += '</svg>';
+  }
+
+  // Dust motes
+  let dust = '';
+  for(let i=0;i<10;i++){
+    dust += `<div style="position:absolute;left:${10+i*8+Math.sin(i)*5}%;top:${40+Math.cos(i)*20}%;width:2px;height:2px;border-radius:50%;background:rgba(232,222,204,0.35);animation:dustDrift ${18+i*3}s ease-in-out ${i*2}s infinite"></div>`;
+  }
+
+  return `
+    <div class="observatory">
+      <div class="sky-dome">
+        <div class="sky-rotate">
+          ${bgStars.map(s=>`<div style="position:absolute;left:${s.x}%;top:${s.y}%;width:${s.size}px;height:${s.size}px;border-radius:50%;background:#e8decc;opacity:${s.opacity};box-shadow:0 0 ${s.size*2}px rgba(232,222,204,0.4);animation:twinkle ${5+s.delay}s ease-in-out ${s.delay}s infinite"></div>`).join('')}
+        </div>
+        ${conSvg}
+        <div class="dome-text" id="dome-text">${state.annotation}</div>
+      </div>
+      <div class="stone-gradient"></div>
+      <div class="stone-walls">
+        <div style="position:absolute;left:6%;top:10%;width:160px;height:160px;background:radial-gradient(circle,rgba(255,140,50,0.18) 0%,transparent 70%);animation:torchFlicker 2.8s ease-in-out infinite"></div>
+        <div style="position:absolute;right:6%;top:10%;width:160px;height:160px;background:radial-gradient(circle,rgba(255,140,50,0.18) 0%,transparent 70%);animation:torchFlicker 3.2s ease-in-out 0.7s infinite"></div>
+        ${[15,35,55,75].map(p=>`<div style="position:absolute;bottom:${p}%;left:5%;right:5%;height:1px;background:rgba(60,45,30,0.2)"></div>`).join('')}
+      </div>
+      ${dust}
+    </div>`;
+}
+
+function showDome(text){
+  state.annotation = text;
+  const el = document.getElementById('dome-text');
+  if(el){ el.textContent = text; el.classList.remove('visible'); setTimeout(()=>el.classList.add('visible'),100); setTimeout(()=>el.classList.remove('visible'),6000); }
+}
+
+// ─── RENDER ─────────────────────────────────────────────────────────────────
+const app = document.getElementById('app');
+
+function render(){
+  if(state.stage==='onboarding') renderOnboarding();
+  else if(state.stage==='threshold') renderThreshold();
+  else if(state.stage==='opening') renderOpening();
+  else if(state.stage==='questions') renderQuestions();
+  else if(state.stage==='processing') renderProcessing();
+  else if(state.stage==='email_gate') renderEmailGate();
+  else if(state.stage==='output') renderOutput();
+}
+
+function renderOnboarding(){
+  const s = ONBOARDING[state.slide];
+  const isLast = state.slide === ONBOARDING.length-1;
+  app.innerHTML = `<div class="base">${renderObservatory()}
+    <div class="panel">
+      <div class="mark" style="display:flex;justify-content:space-between"><span>The Courtyard</span><span style="opacity:0.4">${state.slide+1} / ${ONBOARDING.length}</span></div>
+      <div class="progress-bar">${ONBOARDING.map((_,i)=>`<div class="progress-segment ${i<=state.slide?'progress-on':'progress-off'}"></div>`).join('')}</div>
+      <div style="font-size:26px;font-weight:500;margin-bottom:20px;line-height:1.3">${s.title}</div>
+      <div style="font-size:17px;line-height:1.75;opacity:0.9;margin-bottom:28px">${s.body}</div>
+      <div style="font-size:13px;font-style:italic;opacity:0.55;border-left:2px solid rgba(232,222,204,0.2);padding-left:16px;margin-bottom:40px;line-height:1.6">${s.hint}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        ${state.slide>0?'<button class="ghost-btn" onclick="state.slide--;render()">← Back</button>':'<div></div>'}
+        <button class="btn" onclick="${isLast?'state.stage=\'threshold\';render()':'state.slide++;render()'}">${isLast?'Enter the Courtyard':'Continue'}</button>
+      </div>
+      <div style="margin-top:28px;text-align:center;font-size:10px;opacity:0.25;letter-spacing:0.3em;font-family:Georgia,serif">candle.codes</div>
+    </div>
+  </div>`;
+}
+
+function renderThreshold(){
+  app.innerHTML = `<div class="base">${renderObservatory()}
+    <div class="panel" style="text-align:center;padding:60px 44px">
+      <div class="mark" style="text-align:center">The Courtyard</div>
+      <div style="font-size:28px;line-height:1.5;margin-bottom:52px;font-style:italic">
+        Most people are held accountable<br>for what they produce.<br>
+        <span style="opacity:0.75">This asks something different.</span>
+      </div>
+      <button class="btn" onclick="state.stage='opening';render()">Enter</button>
+      <div style="margin-top:40px;font-size:10px;opacity:0.25;letter-spacing:0.3em;font-family:Georgia,serif">candle.codes · IPCA</div>
+    </div>
+  </div>`;
+}
+
+function renderOpening(){
+  app.innerHTML = `<div class="base">${renderObservatory()}
+    <div class="panel">
+      <div class="mark">Before We Begin</div>
+      <div style="font-size:21px;line-height:1.55;margin-bottom:28px">Name one thing you are currently trying to make work.</div>
+      <div style="font-size:13px;opacity:0.5;font-style:italic;margin-bottom:20px;line-height:1.6">This opens the encounter. The questions that follow will be built from what you give here.</div>
+      <textarea class="textarea" id="opening-input" rows="5">${state.opening}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
+        <button class="ghost-btn" onclick="state.stage='onboarding';render()">← Return</button>
+        <button class="btn" id="btn-opening" onclick="submitOpening()">Continue</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>{
+    const el=document.getElementById('opening-input');
+    if(el) el.focus();
+    showDome('Opening the encounter — listening begins');
+  },200);
+}
+
+function submitOpening(){
+  const v = document.getElementById('opening-input').value.trim();
+  if(v.length<15) return;
+  state.opening = v;
+  state.stage = 'questions';
+  render();
+}
+
+function renderQuestions(){
+  const q = state.questions[state.currentQ];
+  const a = state.answers[state.currentQ]||'';
+  const isLast = state.currentQ === TOTAL_Q-1;
+  const canGo = a.trim().length>=12 && !state.generating;
+
+  app.innerHTML = `<div class="base">${renderObservatory()}
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <div class="mark" style="margin-bottom:0">Question ${state.currentQ+1} of ${TOTAL_Q}</div>
+        <div style="display:flex;gap:4px">
+          ${Array.from({length:TOTAL_Q}).map((_,i)=>`<div style="width:20px;height:1.5px;background:rgba(232,222,204,${i<state.currentQ?0.8:i===state.currentQ?0.5:0.12})"></div>`).join('')}
+        </div>
+      </div>
+      <div style="font-size:20px;line-height:1.6;margin-bottom:26px;min-height:64px">
+        ${state.generating ? '<span style="opacity:0.5;font-style:italic;font-size:14px">Reading your answer...<span style="display:inline-block;animation:pulse 1.2s infinite;margin-left:8px">◦</span></span>' : q}
+      </div>
+      <textarea class="textarea" id="answer-input" rows="5" ${state.generating?'disabled':''}>${a}</textarea>
+      ${state.error?`<div style="color:#c4845a;margin-top:12px;font-size:13px">${state.error}</div>`:''}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
+        ${state.currentQ>0&&!state.generating?'<button class="ghost-btn" onclick="goBack()">← Back</button>':'<div></div>'}
+        <button class="btn" id="btn-advance" ${canGo?'':'disabled'} onclick="advance()">${state.generating?'Reading...':isLast?'Complete':'Next'}</button>
+      </div>
+      ${state.traceLog.length?`<div style="margin-top:20px;border-top:1px solid rgba(232,222,204,0.08);padding-top:16px">
+        <div style="font-size:9px;letter-spacing:0.3em;opacity:0.4;font-family:Georgia,serif;margin-bottom:10px;text-transform:uppercase">Trace Log</div>
+        ${state.traceLog.map((e,i)=>`<div class="trace-entry">Q${i+1} → ${e}</div>`).join('')}
+      </div>`:''}
+    </div>
+  </div>`;
+  if(!state.generating) setTimeout(()=>{const el=document.getElementById('answer-input');if(el)el.focus();},100);
+}
+
+function goBack(){
+  state.currentQ--;
+  render();
+}
+
+async function advance(){
+  const el = document.getElementById('answer-input');
+  state.answers[state.currentQ] = el.value.trim();
+
+  // Add constellation star
+  const ratio = processRatio(state.answers[state.currentQ]);
+  const words = state.answers[state.currentQ].split(/\s+/).length;
+  const base = BASE_STARS[state.currentQ]||{x:50,y:30};
+  state.constellation.push({
+    x: base.x+(Math.random()*6-3), y: base.y+(Math.random()*6-3),
+    size: Math.min(2.2,Math.max(0.6,words/25)), brightness: ratio, ratio
+  });
+
+  if(state.currentQ < TOTAL_Q-1){
+    state.generating = true;
+    state.error = '';
+    render();
+    try {
+      const context = state.answers.slice(0,state.currentQ+1).map((a,i)=>`Q${i+1}: ${state.questions[i]}\nA${i+1}: ${a}`).join('\n\n');
+      const prompt = `Opening: "${state.opening}"\n\nConversation:\n${context}\n\nThis is question ${state.currentQ+2} of 7. Generate the next question.`;
+      const result = await callAPI(QUESTION_GEN_PROMPT, prompt, 400);
+      state.questions.push(sanitize(result.question));
+      state.answers.push('');
+      if(result.annotation) showDome(sanitize(result.annotation));
+      if(result.process_note) state.traceLog.push(sanitize(result.process_note));
+      state.currentQ++;
+    } catch(e){
+      state.error = 'The path shifted. Try again.';
+    }
+    state.generating = false;
+    render();
+  } else {
+    // Generate report
+    state.stage = 'processing';
+    render();
+    try {
+      const context = state.answers.map((a,i)=>`Q${i+1}: ${state.questions[i]}\nA: ${a}`).join('\n\n');
+      const prompt = `Opening: "${state.opening}"\n\n${context}\n\nGenerate the complete Courtyard Report.`;
+      state.report = await callAPI(FINAL_GEN_PROMPT, prompt, 1800);
+      setTimeout(()=>{state.stage='email_gate';render();},3500);
+    } catch(e){
+      state.error = 'The reading was interrupted. Try again.';
+      state.stage = 'questions';
+      render();
+    }
+  }
+}
+
+function renderProcessing(){
+  app.innerHTML = `<div class="base">${renderObservatory()}
+    <div class="panel" style="text-align:center;padding:64px 44px">
+      <div class="mark" style="text-align:center">Reading Your Responses</div>
+      <div style="font-size:17px;font-style:italic;opacity:0.75;line-height:1.7;margin-bottom:40px">
+        The trace is being read.<br><span style="opacity:0.5;font-size:14px">The dome is completing its alignment.</span>
+      </div>
+      <div style="display:flex;justify-content:center;gap:10px">
+        ${[0,1,2].map(i=>`<div style="width:7px;height:7px;border-radius:50%;background:#e8decc;animation:pulse 1.5s ease-in-out ${i*0.35}s infinite"></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  showDome('All seven marks received — reading the full trace');
+}
+
+function renderEmailGate(){
+  app.innerHTML = `<div class="base">${renderObservatory()}
+    <div class="panel">
+      <div style="text-align:center;margin-bottom:36px">
+        <div style="display:inline-block;width:100px;height:66px;background:linear-gradient(145deg,#e8decc 0%,#c4b898 100%);border-radius:2px;position:relative;box-shadow:0 12px 30px rgba(0,0,0,0.6)">
+          <div style="position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#cc4422 0%,#7a1a08 60%,#3a0800 100%);animation:sealPulse 2.5s ease-in-out infinite"></div>
+        </div>
+      </div>
+      <div class="mark" style="text-align:center">Your Report Is Ready</div>
+      <div style="font-size:18px;line-height:1.65;margin-bottom:28px;opacity:0.9">The letter has been sealed. Enter your name and email to break the seal and receive your report.</div>
+      <input class="input-field" type="text" id="gate-name" placeholder="Name" value="${state.name}">
+      <input class="input-field" type="email" id="gate-email" placeholder="Email address" value="${state.email}">
+      <button class="btn btn-full" id="btn-seal" onclick="breakSeal()">Break the Seal</button>
+    </div>
+  </div>`;
+  showDome('The report has been sealed — awaiting your name');
+  setTimeout(()=>{document.getElementById('gate-name')?.focus();},200);
+}
+
+function breakSeal(){
+  state.name = document.getElementById('gate-name').value.trim();
+  state.email = document.getElementById('gate-email').value.trim();
+  if(state.name.length<2 || !state.email.includes('@')) return;
+
+  // Unlock temple visibility and mark courtyard as completed
+  unlockTemple();
+  markCompleted();
+
+  state.stage = 'output';
+  state.revealStage = 0;
+  render();
+
+  // Cascade reveal
+  setTimeout(()=>{state.revealStage=1;render();},500);
+  setTimeout(()=>{state.revealStage=2;render();},3500);
+  setTimeout(()=>{state.revealStage=3;render();},6500);
+  setTimeout(()=>{state.revealStage=4;render();},9500);
+  setTimeout(()=>{state.revealStage=5;render();},13000);
+  setTimeout(()=>{
+    state.revealStage=6;
+    render();
+    showDome(state.report.constellation_profile || 'Seven answers. One trace. Yours.');
+  },15000);
+}
+
+function renderOutput(){
+  const r = state.report;
+  if(!r) return;
+
+  let html = `<div class="base">${renderObservatory()}
+    <div class="panel wide" style="padding:48px 44px">
+      <div class="mark" style="text-align:center">The Courtyard Report</div>
+      ${state.name?`<div style="text-align:center;font-size:13px;opacity:0.5;margin-bottom:40px;font-style:italic">For ${state.name}</div>`:''}`;
+
+  if(state.revealStage>=1){
+    html += `<div style="margin-bottom:40px;animation:slideUp 0.8s ease-out"><div style="font-size:16px;line-height:1.8">${r.posture_paragraph}</div></div>`;
+  }
+  if(state.revealStage>=2){
+    html += `<div style="margin-bottom:36px;animation:slideUp 0.8s ease-out"><div class="section-label">The Gap</div><div style="font-size:18px;line-height:1.65;font-style:italic;border-left:2px solid rgba(232,222,204,0.25);padding-left:20px">${r.gap}</div></div>`;
+  }
+  if(state.revealStage>=3){
+    html += `<div style="margin-bottom:52px;animation:slideUp 0.8s ease-out"><div class="section-label">The Reframe</div><div style="font-size:18px;line-height:1.65;font-style:italic;border-left:2px solid rgba(232,222,204,0.25);padding-left:20px">${r.reframe}</div></div>`;
+  }
+  if(state.revealStage>=4){
+    html += `<div style="text-align:center;padding-top:32px;border-top:1px solid rgba(232,222,204,0.18);margin-bottom:32px"><div class="section-label" style="text-align:center;margin-bottom:20px">Your Posture</div><div style="font-size:30px;letter-spacing:0.08em;font-style:italic">${r.posture_name}</div></div>`;
+  }
+  if(state.revealStage>=5 && r.unanswered_question){
+    html += `<div style="margin-top:8px;margin-bottom:40px;animation:slideUp 0.8s ease-out">
+      <div style="padding:32px;background:rgba(232,222,204,0.03);border:1px solid rgba(232,222,204,0.15);border-radius:2px">
+        <div class="section-label">The Question This Assessment Cannot Yet Answer</div>
+        <div style="font-size:20px;line-height:1.7;font-style:italic;margin-bottom:28px">${r.unanswered_question}</div>
+        <div style="padding-top:20px;border-top:1px solid rgba(232,222,204,0.1)">
+          <div style="font-size:13px;opacity:0.6;line-height:1.65;margin-bottom:18px;font-style:italic">The only way to find yours is to walk in.</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  if(state.revealStage>=6){
+    // Constellation visualization
+    let svg = '<svg viewBox="0 0 100 70" style="width:100%;height:120px">';
+    state.constellation.forEach((s,i)=>{
+      if(i>0){ const p=state.constellation[i-1]; svg+=`<line x1="${p.x}" y1="${p.y}" x2="${s.x}" y2="${s.y}" stroke="rgba(232,222,204,0.25)" stroke-width="0.2"/>`; }
+      svg+=`<circle cx="${s.x}" cy="${s.y}" r="${s.size*0.5+0.5}" fill="rgba(232,222,204,0.1)"/>`;
+      svg+=`<circle cx="${s.x}" cy="${s.y}" r="${s.size*0.25+0.25}" fill="#e8decc" style="filter:drop-shadow(0 0 ${s.size}px rgba(232,222,204,${s.brightness}))"/>`;
+    });
+    svg += '</svg>';
+
+    html += `<div style="animation:fadeIn 1s ease-out">
+      <div style="margin-bottom:36px"><div class="section-label">Your Constellation</div>
+        <div style="background:rgba(10,8,6,0.6);border-radius:2px;padding:20px;border:1px solid rgba(232,222,204,0.1)">
+          ${svg}
+          ${r.constellation_profile?`<div style="font-size:11px;font-style:italic;opacity:0.5;text-align:center;margin-top:8px">${r.constellation_profile}</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;margin-bottom:28px;justify-content:center;flex-wrap:wrap">
+        <button class="btn" onclick="downloadPDF()">Download Report</button>
+        <button class="btn" onclick="window.location.href='/'">Enter the Temple</button>
+      </div>
+      <div style="padding-top:28px;border-top:1px solid rgba(232,222,204,0.1);font-size:15px;font-style:italic;opacity:0.65;line-height:1.7;text-align:center">
+        The temple is now visible to you. The deeper instruments await.
+      </div>
+    </div>`;
+  }
+
+  // Note about returning
+  if(state.revealStage>=6){
+    html += `<div style="text-align:center;font-size:11px;opacity:0.3;margin-top:20px;font-style:italic">When you return to this address, it will carry you directly to the temple.</div>`;
+  }
+
+  html += `</div></div>`;
+  app.innerHTML = html;
+}
+
+// ─── PDF ────────────────────────────────────────────────────────────────────
+function downloadPDF(){
+  try {
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF({unit:'pt',format:'letter'});
+    const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=72, CW=W-M*2;
+    const bg=()=>{doc.setFillColor(10,8,6);doc.rect(0,0,W,H,'F');};
+    const txt=()=>doc.setTextColor(232,222,204);
+
+    bg(); txt();
+    doc.setFont('times','normal'); doc.setFontSize(28);
+    doc.text('Courtyard Report',M,M+90);
+    if(state.name){doc.setFontSize(11);doc.setFont('times','italic');doc.text('For '+state.name,M,M+120);}
+    doc.setFontSize(14);doc.setFont('times','italic');
+    doc.text(state.report.posture_name,M,M+160);
+
+    let y=M+200;
+    doc.setFont('times','normal');doc.setFontSize(11);
+    const pLines=doc.splitTextToSize(state.report.posture_paragraph,CW);
+    doc.text(pLines,M,y); y+=pLines.length*15+28;
+
+    const section=(label,content)=>{
+      doc.setFont('times','italic');doc.setFontSize(9);doc.text(label,M,y);y+=18;
+      doc.setFont('times','normal');doc.setFontSize(12);
+      const lines=doc.splitTextToSize(content,CW);doc.text(lines,M,y);y+=lines.length*16+28;
+    };
+    section('THE GAP',state.report.gap);
+    section('THE REFRAME',state.report.reframe);
+    section('THE UNANSWERED QUESTION',state.report.unanswered_question);
+
+    doc.save('courtyard-'+Date.now()+'.pdf');
+  } catch(e){ console.error(e); }
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
