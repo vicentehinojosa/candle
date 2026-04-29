@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Trace — Process Accountability Evaluator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050510;
+    --gold: #C9A84C;
+    --parchment: #E8D5B7;
+    --ash: #8B7355;
+    --green: #4CAF7A;
+    --yellow: #C9A84C;
+    --red: #C0392B;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:1000; opacity:0.6;
+  }
+
+  .temple-bar{position:fixed;top:0;left:0;right:0;height:36px;background:rgba(5,5,16,0.92);border-bottom:1px solid rgba(201,168,76,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:900;backdrop-filter:blur(8px);}
+  .temple-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(201,168,76,0.35) 20%,rgba(201,168,76,0.5) 50%,rgba(201,168,76,0.35) 80%,transparent 100%);}
+  .temple-bar-brand{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(201,168,76,0.55);text-decoration:none;}
+  .temple-bar-brand:hover{color:rgba(201,168,76,0.75);}
+  .temple-bar-return{font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(139,115,85,0.5);text-decoration:none;transition:color 0.3s;}
+  .temple-bar-return:hover{color:rgba(201,168,76,0.7);}
+
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 3rem; }
+  .header-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem; letter-spacing: 0.35em;
+    text-transform: uppercase; color: var(--gold);
+    opacity: 0.55; margin-bottom: 1.2rem;
+  }
+  .header-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 400; color: var(--parchment);
+    letter-spacing: 0.08em; margin-bottom: 0.8rem;
+  }
+  .header-sub {
+    font-size: 1.05rem; font-style: italic;
+    color: var(--ash); line-height: 1.8;
+    max-width: 44ch; margin: 0 auto;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+    margin-bottom: 2rem;
+  }
+  .tab {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem; letter-spacing: 0.18em;
+    text-transform: uppercase; padding: 0.8rem 1.5rem;
+    background: none; border: none; color: var(--ash);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all 0.2s;
+  }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab:hover { color: var(--parchment); }
+
+  /* Input panels */
+  .input-panel { display: none; }
+  .input-panel.active { display: block; }
+
+  .panel-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--gold);
+    opacity: 0.55; margin-bottom: 0.8rem;
+  }
+  .panel-hint {
+    font-size: 0.88rem; font-style: italic;
+    color: var(--ash); line-height: 1.7;
+    margin-bottom: 1.2rem;
+  }
+  textarea {
+    width: 100%; background: rgba(201,168,76,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem; padding: 1rem 1.2rem;
+    min-height: 200px; resize: vertical;
+    outline: none; line-height: 1.65;
+    transition: border-color 0.3s;
+  }
+  textarea:focus { border-color: rgba(201,168,76,0.4); }
+  textarea::placeholder { color: rgba(232,213,183,0.2); font-style: italic; }
+
+  .upload-zone {
+    border: 1px dashed rgba(201,168,76,0.25);
+    padding: 2.5rem; text-align: center;
+    cursor: pointer; transition: all 0.3s;
+    background: rgba(201,168,76,0.02);
+  }
+  .upload-zone:hover { border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.04); }
+  .upload-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+  .upload-icon { font-size: 2rem; color: var(--gold); opacity: 0.4; margin-bottom: 1rem; }
+  .upload-text { font-size: 0.95rem; color: var(--ash); line-height: 1.7; }
+  .upload-text strong { color: var(--parchment); font-weight: 400; }
+  .file-loaded {
+    margin-top: 1rem; padding: 0.8rem 1rem;
+    background: rgba(76,175,122,0.08);
+    border: 1px solid rgba(76,175,122,0.2);
+    font-size: 0.85rem; color: var(--green);
+    font-family: 'Cinzel', serif; letter-spacing: 0.1em;
+  }
+
+  .context-group { margin-top: 1.5rem; }
+  .context-input {
+    width: 100%; background: rgba(201,168,76,0.04);
+    border: 1px solid rgba(201,168,76,0.15);
+    color: var(--parchment); font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem; padding: 0.8rem 1rem;
+    outline: none; margin-bottom: 0.8rem;
+    transition: border-color 0.3s;
+  }
+  .context-input:focus { border-color: rgba(201,168,76,0.35); }
+  .context-input::placeholder { color: rgba(232,213,183,0.2); font-style: italic; }
+
+  .btn-evaluate {
+    width: 100%; margin-top: 1.5rem;
+    background: var(--gold); color: var(--bg);
+    border: none; padding: 1rem;
+    font-family: 'Cinzel', serif; font-size: 0.72rem;
+    font-weight: 600; letter-spacing: 0.22em;
+    text-transform: uppercase; cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .btn-evaluate:hover:not(:disabled) { background: #d4b86a; transform: translateY(-1px); }
+  .btn-evaluate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Loading */
+  .loading {
+    text-align: center; padding: 3rem 0;
+  }
+  @keyframes breathe {
+    0%,100%{ opacity:0.35; transform:scale(1); }
+    50%{ opacity:0.7; transform:scale(1.06); }
+  }
+  .loading-symbol {
+    font-size: 2rem; color: var(--gold);
+    animation: breathe 2.5s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+  .loading-text {
+    font-family: 'Cinzel', serif; font-size: 0.52rem;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--ash); opacity: 0.5;
+  }
+
+  /* Results */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .results {
+    animation: fadeUp 0.8s ease forwards;
+    margin-top: 2rem;
+  }
+  .results-eyebrow {
+    font-family: 'Cinzel', serif; font-size: 0.52rem;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--gold); opacity: 0.5;
+    text-align: center; margin-bottom: 2rem;
+  }
+
+  /* Confidence bar */
+  .confidence-wrap { margin-bottom: 2.5rem; }
+  .confidence-label {
+    display: flex; justify-content: space-between;
+    align-items: baseline; margin-bottom: 0.6rem;
+  }
+  .confidence-title {
+    font-family: 'Cinzel', serif; font-size: 0.58rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ash);
+  }
+  .confidence-pct {
+    font-family: 'Cinzel', serif; font-size: 1.1rem;
+    color: var(--parchment);
+  }
+  .bar-track {
+    height: 8px; background: rgba(232,213,183,0.08);
+    border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 1.2s cubic-bezier(0.16,1,0.3,1);
+  }
+  .bar-fill.high { background: linear-gradient(90deg, #2d8a56, var(--green)); }
+  .bar-fill.medium { background: linear-gradient(90deg, #8a7a2d, var(--yellow)); }
+  .bar-fill.low { background: linear-gradient(90deg, #7a1a08, var(--red)); }
+
+  .tier-label {
+    font-family: 'Cinzel', serif; font-size: 0.85rem;
+    letter-spacing: 0.1em; text-align: center;
+    padding: 0.5rem 1.5rem; display: inline-block;
+    margin: 0.5rem auto; display: block; width: fit-content;
+    margin-left: auto; margin-right: auto;
+  }
+  .tier-label.high { color: var(--green); border: 1px solid rgba(76,175,122,0.3); }
+  .tier-label.medium { color: var(--yellow); border: 1px solid rgba(201,168,76,0.3); }
+  .tier-label.low { color: var(--red); border: 1px solid rgba(192,57,43,0.3); }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 1rem;
+    margin: 2rem 0;
+  }
+  .divider-line { flex:1; height:1px; background:rgba(201,168,76,0.1); }
+  .divider-mark { font-size:0.5rem; color:var(--gold); opacity:0.3; }
+
+  /* Rationale */
+  .rationale { margin-bottom: 2rem; }
+  .rationale-text {
+    font-size: 1.05rem; line-height: 1.9;
+    color: var(--parchment); margin-bottom: 1.5rem;
+  }
+
+  /* Trace moments */
+  .trace-moments { margin-bottom: 2rem; }
+  .trace-moment {
+    border-left: 2px solid rgba(201,168,76,0.2);
+    padding: 0.8rem 0 0.8rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .trace-moment-label {
+    font-family: 'Cinzel', serif; font-size: 0.48rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold); opacity: 0.5; margin-bottom: 0.4rem;
+  }
+  .trace-moment-text {
+    font-size: 0.95rem; line-height: 1.75;
+    color: rgba(232,213,183,0.75); font-style: italic;
+  }
+
+  /* Reset */
+  .btn-reset {
+    background: transparent; border: 1px solid rgba(201,168,76,0.2);
+    color: var(--ash); padding: 0.75rem 2rem;
+    font-family: 'Cinzel', serif; font-size: 0.58rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.3s;
+    display: block; margin: 0 auto;
+  }
+  .btn-reset:hover { color: var(--gold); border-color: rgba(201,168,76,0.4); }
+
+  /* Framework note */
+  .framework-note {
+    text-align: center; margin-top: 3rem;
+    padding-top: 2rem; border-top: 1px solid rgba(201,168,76,0.08);
+    font-size: 0.78rem; color: var(--ash); opacity: 0.45;
+    font-style: italic; line-height: 1.7;
+  }
+  .framework-note a {
+    color: var(--gold); opacity: 0.6; text-decoration: none;
+  }
+  .framework-note a:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="temple-bar">
+  <a href="/" class="temple-bar-brand">candle.codes</a>
+  <a href="/" class="temple-bar-return">Return to the Temple</a>
+</div>
+
+<div class="container">
+  <div class="header">
+    <p class="header-eyebrow">Institute for Process-Centered Accountability</p>
+    <h1 class="header-title">The Trace</h1>
+    <p class="header-sub">Not whether AI was used — but whether the process carries a traceable chain of original human agency.</p>
+  </div>
+
+  <div id="input-section">
+    <div class="tabs">
+      <button class="tab active" onclick="setTab('paste')">Paste Chat Log</button>
+      <button class="tab" onclick="setTab('json')">Upload JSON Export</button>
+    </div>
+
+    <!-- Paste tab -->
+    <div class="input-panel active" id="tab-paste">
+      <p class="panel-label">Chat Log</p>
+      <p class="panel-hint">Paste the full conversation — from Claude, ChatGPT, Gemini, or any other assistant. Include the complete exchange including any revisions, dead ends, or redirections. The more complete the log, the more precise the reading.</p>
+      <textarea id="paste-input" placeholder="Paste your conversation here…"></textarea>
+    </div>
+
+    <!-- JSON tab -->
+    <div class="input-panel" id="tab-json">
+      <p class="panel-label">JSON Export</p>
+      <p class="panel-hint">Export your conversation as JSON from Claude (Settings → Export) or ChatGPT (Settings → Data Controls → Export). Drop the file below.</p>
+      <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <div class="upload-icon">⊕</div>
+        <div class="upload-text"><strong>Drop your JSON file here</strong><br>or click to browse</div>
+        <div class="file-loaded" id="file-loaded" style="display:none"></div>
+      </div>
+      <input type="file" id="file-input" accept=".json" style="display:none">
+    </div>
+
+    <!-- Context -->
+    <div class="context-group">
+      <p class="panel-label">Context <span style="opacity:0.4;font-family:serif;font-style:italic;text-transform:none;letter-spacing:0"> — optional but improves precision</span></p>
+      <input type="text" class="context-input" id="ctx-subject" placeholder="Subject or discipline (e.g. Philosophy of Mind, Environmental Law)">
+      <input type="text" class="context-input" id="ctx-type" placeholder="Work type (e.g. dissertation chapter, grant proposal, policy brief)">
+      <input type="text" class="context-input" id="ctx-stage" placeholder="Stage of work (e.g. early draft, final revision, exploratory)">
+    </div>
+
+    <button class="btn-evaluate" id="btn-evaluate" onclick="runEvaluation()">Read the Trace</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-section" style="display:none">
+    <div class="loading">
+      <div class="loading-symbol">◈</div>
+      <p class="loading-text">Reading the trace…</p>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results-section" style="display:none"></div>
+
+  <div class="framework-note">
+    Evaluated against the Process-Centered Accountability framework.<br>
+    <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6362278" target="_blank">Marks Without Hands</a> · <a href="/" >candle.codes</a> · Vicente Hinojosa, IPCA
+  </div>
+</div>
+
+<script>
+const PCA_CORPUS = `PROCESS-CENTERED ACCOUNTABILITY — Evaluative Framework
+
+CORE DISTINCTION (Marks Without Hands):
+A property is observable in an artifact without reference to its production. An achievement is constituted by the process that produced it. The creative locus is the point in any process where determining human judgment occurs. When AI generates content, the question is not what was produced but where the human exercised determining judgment.
+
+INTENTIONALITY-OUTPUT DECOUPLING:
+The condition when artifacts no longer reliably evidence the intentions and capacities of their makers. A high-quality output may reflect no original human thinking. A low-quality output may reflect sustained original engagement. The output cannot be read as evidence of the process.
+
+THE PROCESS GAP:
+The space between instruction and outcome is where accountability is decided. Within this gap: did the human redirect, reject, select, synthesize, or originate? Or did the human accept, forward, minimally edit, and submit? The gap is the accountability site.
+
+FOUR DIMENSIONS OF PCA EVALUATION:
+1. Consent and training provenance — does the human understand and control what is being trained on their behalf?
+2. Pedagogical integrity — does the process develop genuine capacity in the human, or does it substitute for that development?
+3. Authorship and attribution — can the human trace and defend every significant claim?
+4. Material accountability — is there a chain of coherence between the human's living intent and the produced artifact?
+
+THE FISCAL TRACE (Beyond the Authorization Horizon):
+A traceable chain of coherence between a human's living intent and the executed product. When this chain is intact, agency is present. When it is broken — when the product could have been produced without the human's specific intellectual contribution — agency is absent or diminished.
+
+WHAT COUNTS AS EVIDENCE OF HUMAN AGENCY:
+- Original conceptual moves that redirect the conversation
+- Rejection of agent suggestions in favor of a different direction
+- Introduction of domain-specific knowledge the agent did not supply
+- Synthesis of multiple agent outputs into a position the agent did not originate
+- Substantive revision that changes meaning, not only style
+- Questions that demonstrate existing conceptual framework the agent is filling in
+
+WHAT COUNTS AS EVIDENCE OF DIMINISHED AGENCY:
+- Acceptance of agent framing without interrogation
+- Minimal prompting followed by full agent generation
+- Editing confined to surface style without engagement with substance
+- The agent completing arguments the human initiated but did not develop
+- No evidence that the human could defend the claims independently`;
+
+const EVAL_PROMPT = `You are an evaluator trained in Process-Centered Accountability (PCA). You read conversation logs between humans and AI assistants and evaluate the degree of human intellectual agency present in the process.
+
+You are NOT evaluating whether AI was used. You are evaluating the QUALITY and PRESENCE of human agency within the collaboration.
+
+FRAMEWORK:
+${PCA_CORPUS}
+
+You will return a structured JSON evaluation. Be precise, fair, and grounded only in what the log actually shows. Do not penalize AI use. Penalize absent human agency.
+
+Return valid JSON only:
+{
+  "score": <integer 0-100, where 100 = maximum human agency, 0 = no traceable human agency>,
+  "tier": <"high" | "medium" | "low">,
+  "tier_label": <"High Human Agency" | "Medium Human Agency" | "Low Human Agency">,
+  "rationale": <2-3 sentences. Plain language. What does this log show about the human's intellectual contribution? Be specific. Do not hedge excessively.>,
+  "trace_moments": [
+    { "label": <short label e.g. "Original Redirection" or "Uncritical Acceptance">, "text": <one sentence describing a specific moment in the log that evidences agency or its absence> },
+    { "label": "...", "text": "..." },
+    { "label": "...", "text": "..." }
+  ],
+  "framework_note": <one sentence: the single most relevant PCA concept at work in this evaluation>
+}`;
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let activeTab = 'paste';
+let jsonContent = '';
+
+function setTab(tab){
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', (i===0&&tab==='paste')||(i===1&&tab==='json'));
+  });
+  document.getElementById('tab-paste').classList.toggle('active', tab==='paste');
+  document.getElementById('tab-json').classList.toggle('active', tab==='json');
+}
+
+// ─── FILE UPLOAD ─────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e=>{ e.preventDefault(); dropZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file){
+  if(!file || !file.name.endsWith('.json')) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try {
+      const data = JSON.parse(e.target.result);
+      jsonContent = extractText(data);
+      const loaded = document.getElementById('file-loaded');
+      loaded.style.display = 'block';
+      loaded.textContent = '✓ ' + file.name + ' loaded — ' + jsonContent.split(' ').length + ' words extracted';
+    } catch(err){ alert('Could not parse JSON file.'); }
+  };
+  reader.readAsText(file);
+}
+
+function extractText(data){
+  // Handle Claude export format
+  if(Array.isArray(data)){
+    return data.map(msg=>{
+      const role = msg.role || msg.sender || 'unknown';
+      const content = msg.content || msg.text || '';
+      const text = typeof content === 'string' ? content : (Array.isArray(content) ? content.map(c=>c.text||'').join(' ') : '');
+      return `[${role}]: ${text}`;
+    }).join('\n\n');
+  }
+  // Handle ChatGPT export format
+  if(data.mapping){
+    const msgs = Object.values(data.mapping)
+      .filter(n=>n.message?.content?.parts)
+      .sort((a,b)=>(a.message.create_time||0)-(b.message.create_time||0));
+    return msgs.map(n=>`[${n.message.author.role}]: ${n.message.content.parts.join(' ')}`).join('\n\n');
+  }
+  // Fallback — stringify
+  return JSON.stringify(data, null, 2).substring(0, 50000);
+}
+
+// ─── EVALUATE ────────────────────────────────────────────────────────────────
+async function runEvaluation(){
+  const content = activeTab==='paste'
+    ? document.getElementById('paste-input').value.trim()
+    : jsonContent;
+
+  if(!content || content.length < 100){
+    alert('Please provide a chat log to evaluate.');
+    return;
+  }
+
+  const subject = document.getElementById('ctx-subject').value.trim();
+  const type = document.getElementById('ctx-type').value.trim();
+  const stage = document.getElementById('ctx-stage').value.trim();
+
+  const context = [subject&&`Discipline: ${subject}`, type&&`Work type: ${type}`, stage&&`Stage: ${stage}`].filter(Boolean).join('. ');
+
+  document.getElementById('input-section').style.display = 'none';
+  document.getElementById('loading-section').style.display = 'block';
+
+  const userMessage = `${context ? 'Context: ' + context + '\n\n' : ''}CONVERSATION LOG:\n\n${content.substring(0, 40000)}`;
+
+  try {
+    const res = await fetch('/api/trace', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        max_tokens: 1200,
+        system: EVAL_PROMPT,
+        messages: [{ role: 'user', content: userMessage }]
+      })
+    });
+    const data = await res.json();
+    const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    const match = text.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    if(!match) throw new Error('No JSON returned');
+    const result = JSON.parse(match[0]);
+    showResults(result);
+  } catch(e){
+    document.getElementById('loading-section').style.display = 'none';
+    document.getElementById('input-section').style.display = 'block';
+    alert('The evaluation failed. Please try again.');
+  }
+}
+
+function showResults(r){
+  document.getElementById('loading-section').style.display = 'none';
+
+  const score = Math.min(100, Math.max(0, r.score || 50));
+  const tier = r.tier || (score>=70?'high':score>=40?'medium':'low');
+  const tierLabel = r.tier_label || (tier==='high'?'High Human Agency':tier==='medium'?'Medium Human Agency':'Low Human Agency');
+
+  const traceMomentsHTML = (r.trace_moments||[]).map(m=>`
+    <div class="trace-moment">
+      <div class="trace-moment-label">${m.label||'Trace Point'}</div>
+      <div class="trace-moment-text">${m.text||''}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('results-section').style.display = 'block';
+  document.getElementById('results-section').innerHTML = `
+    <div class="results">
+      <p class="results-eyebrow">Evaluation Complete</p>
+
+      <div class="confidence-wrap">
+        <div class="confidence-label">
+          <span class="confidence-title">Human Agency Score</span>
+          <span class="confidence-pct">${score}%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ${tier}" id="bar-fill" style="width:0%"></div>
+        </div>
+        <div class="tier-label ${tier}">${tierLabel}</div>
+      </div>
+
+      <div class="divider"><div class="divider-line"></div><span class="divider-mark">◈</span><div class="divider-line"></div></div>
+
+      <div class="rationale">
+        <p class="panel-label" style="margin-bottom:0.8rem">The Reading</p>
+        <p class="rationale-text">${r.rationale||''}</p>
+      </div>
+
+      ${traceMomentsHTML ? `
+        <div class="trace-moments">
+          <p class="panel-label" style="margin-bottom:1rem">Trace Moments</p>
+          ${traceMomentsHTML}
+        </div>
+      ` : ''}
+
+      ${r.framework_note ? `
+        <div style="padding:1.2rem 1.5rem;border:1px solid rgba(201,168,76,0.12);margin-bottom:2rem">
+          <p class="panel-label" style="margin-bottom:0.5rem">Framework Note</p>
+          <p style="font-size:0.92rem;font-style:italic;color:var(--ash);line-height:1.7">${r.framework_note}</p>
+        </div>
+      ` : ''}
+
+      <button class="btn-reset" onclick="reset()">Evaluate Another</button>
+    </div>
+  `;
+
+  // Animate bar
+  setTimeout(()=>{
+    document.getElementById('bar-fill').style.width = score + '%';
+  }, 100);
+}
+
+function reset(){
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('results-section').innerHTML = '';
+  document.getElementById('input-section').style.display = 'block';
+  document.getElementById('paste-input').value = '';
+  jsonContent = '';
+  document.getElementById('file-loaded').style.display = 'none';
+  document.getElementById('ctx-subject').value = '';
+  document.getElementById('ctx-type').value = '';
+  document.getElementById('ctx-stage').value = '';
+}
+</script>
+</body>
+</html>
