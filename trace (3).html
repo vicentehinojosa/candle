@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Trace — Evaluate Your Process</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           #F5F1EC;
+  --bg-subtle:    #EDE9E2;
+  --ink:          #1C1917;
+  --mid:          #5C5248;
+  --light:        #9C8E82;
+  --border:       #DAD4CC;
+  --border-focus: #B5ACA3;
+  --accent:       #7D4E3A;
+  --accent-hover: #6A4030;
+  --high:         #3A6B4A;
+  --medium:       #7A6230;
+  --low:          #8B3A3A;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 48px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; background: var(--bg);
+  position: relative; z-index: 10;
+}
+
+.nav-brand {
+  font-family: 'Lora', serif;
+  font-size: 0.82rem; letter-spacing: 0.1em;
+  color: var(--ink); text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-links { display: flex; gap: 1.8rem; }
+
+.nav-links a {
+  font-size: 0.7rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--light);
+  text-decoration: none; transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--ink); }
+
+/* ── APP BODY ── */
+.app-body {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+
+/* ── BRAND SPACE ── */
+.brand-space {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 2rem; text-align: center;
+  transition: opacity 0.35s ease, max-height 0.45s ease, padding 0.4s ease;
+  max-height: 9999px; overflow: hidden;
+}
+
+.brand-space.hidden {
+  opacity: 0; max-height: 0; padding: 0;
+  pointer-events: none;
+}
+
+.brand-eyebrow {
+  font-size: 0.6rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--light);
+  margin-bottom: 1.5rem; font-weight: 400;
+}
+
+.brand-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 500; color: var(--ink);
+  letter-spacing: -0.01em; margin-bottom: 0.9rem;
+  line-height: 1.1;
+}
+
+.brand-sub {
+  font-family: 'Lora', serif;
+  font-style: italic; font-size: 1rem;
+  color: var(--mid); max-width: 36ch;
+}
+
+/* ── LOADING ── */
+.loading-space {
+  flex: 1; display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 1.2rem;
+}
+.loading-space.active { display: flex; }
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50%       { opacity: 0.7;  transform: scale(1.1); }
+}
+
+.loading-mark {
+  font-family: 'Lora', serif; font-size: 1.8rem;
+  color: var(--accent);
+  animation: breathe 3s ease-in-out infinite;
+}
+
+.loading-label {
+  font-size: 0.6rem; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--light);
+}
+
+/* ── RESULTS SPACE ── */
+.results-space {
+  flex: 0; overflow-y: auto; opacity: 0;
+  transition: opacity 0.5s ease 0.15s, flex 0.4s ease;
+}
+.results-space.active { flex: 1; opacity: 1; }
+
+.results-inner {
+  max-width: 600px; margin: 0 auto;
+  padding: 3rem 1.5rem 2rem;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.results-eyebrow {
+  font-size: 0.58rem; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--light);
+  text-align: center; margin-bottom: 3rem;
+  animation: fadeUp 0.6s ease forwards;
+}
+
+/* Score */
+.score-block {
+  text-align: center; margin-bottom: 2.5rem;
+  animation: fadeUp 0.6s ease 0.1s both;
+}
+
+.score-number {
+  font-family: 'Lora', serif;
+  font-size: clamp(4.5rem, 14vw, 8rem);
+  font-weight: 500; line-height: 1;
+  color: var(--ink); margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+.score-number.high   { color: var(--high); }
+.score-number.medium { color: var(--medium); }
+.score-number.low    { color: var(--low); }
+
+.score-bar-track {
+  width: 100%; height: 1px;
+  background: var(--border);
+  margin: 0 auto 0.8rem; max-width: 280px;
+  position: relative;
+}
+
+.score-bar-fill {
+  height: 100%; position: absolute; top: 0; left: 0;
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0;
+}
+.score-bar-fill.high   { background: var(--high); }
+.score-bar-fill.medium { background: var(--medium); }
+.score-bar-fill.low    { background: var(--low); }
+
+.score-tier {
+  font-size: 0.62rem; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--mid);
+}
+.score-tier.high   { color: var(--high); }
+.score-tier.medium { color: var(--medium); }
+.score-tier.low    { color: var(--low); }
+
+/* Sections */
+.result-section {
+  margin-bottom: 2rem;
+  animation: fadeUp 0.6s ease 0.25s both;
+}
+
+.section-label {
+  display: block; font-size: 0.58rem;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--light); margin-bottom: 0.8rem;
+}
+
+.section-rule {
+  border: none; border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.rationale-text {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 1rem; line-height: 1.85; color: var(--mid);
+}
+
+/* Trace moments */
+.trace-moment {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--bg-subtle);
+}
+.trace-moment:first-child { border-top: 1px solid var(--bg-subtle); }
+
+.trace-moment-label {
+  font-size: 0.58rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+
+.trace-moment-text {
+  font-size: 0.9rem; color: var(--mid); line-height: 1.7;
+}
+
+/* Framework note */
+.framework-note {
+  padding: 1.2rem 1.4rem;
+  border-left: 2px solid var(--border-focus);
+  background: var(--bg-subtle);
+  margin-top: 2rem;
+}
+
+.framework-note-text {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 0.9rem; color: var(--mid); line-height: 1.75;
+}
+
+.btn-reset {
+  display: inline-block; margin-top: 2rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--mid); padding: 0.6rem 1.6rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.68rem; letter-spacing: 0.18em;
+  text-transform: uppercase; cursor: pointer;
+  transition: all 0.2s; border-radius: 1px;
+}
+.btn-reset:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ── INPUT DOCK ── */
+.input-dock {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 1.4rem 2rem 1.8rem;
+  background: var(--bg);
+  position: relative; z-index: 5;
+}
+
+.input-dock-inner {
+  max-width: 600px; margin: 0 auto;
+}
+
+.dock-label {
+  display: block; font-size: 0.58rem;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--light); margin-bottom: 0.6rem;
+}
+
+textarea {
+  width: 100%; background: transparent;
+  border: 1px solid var(--border); border-radius: 1px;
+  color: var(--ink); font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem; padding: 0.85rem 1rem;
+  min-height: 90px; max-height: 180px;
+  resize: vertical; outline: none; line-height: 1.6;
+  transition: border-color 0.2s;
+}
+textarea:focus { border-color: var(--border-focus); }
+textarea::placeholder { color: var(--light); font-style: italic; }
+
+.context-row {
+  display: flex; gap: 0.5rem; margin-top: 0.5rem;
+}
+
+.context-input {
+  flex: 1; background: transparent;
+  border: 1px solid var(--border); border-radius: 1px;
+  color: var(--mid); font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem; padding: 0.5rem 0.75rem;
+  outline: none; transition: border-color 0.2s;
+}
+.context-input:focus { border-color: var(--border-focus); }
+.context-input::placeholder { color: var(--light); }
+
+.dock-footer {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-top: 0.75rem;
+  gap: 1rem;
+}
+
+.dock-hint {
+  font-size: 0.68rem; color: var(--light);
+  font-style: italic; flex: 1;
+}
+
+.btn-evaluate {
+  flex-shrink: 0;
+  background: var(--accent); color: var(--bg);
+  border: none; padding: 0.65rem 2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  cursor: pointer; border-radius: 1px;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-evaluate:hover:not(:disabled) {
+  background: var(--accent-hover); transform: translateY(-1px);
+}
+.btn-evaluate:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">The Trace</a>
+  <div class="nav-links">
+    <a href="/trace/about">About</a>
+    <a href="https://candle.codes">candle.codes</a>
+  </div>
+</nav>
+
+<div class="app-body">
+
+  <div class="brand-space" id="brand-space">
+    <p class="brand-eyebrow">Institute for Process-Centered Accountability</p>
+    <h1 class="brand-title">The Trace</h1>
+    <p class="brand-sub">A reading of your process.</p>
+  </div>
+
+  <div class="loading-space" id="loading-space">
+    <div class="loading-mark">◈</div>
+    <p class="loading-label">Reading</p>
+  </div>
+
+  <div class="results-space" id="results-space">
+    <div class="results-inner" id="results-inner"></div>
+  </div>
+
+  <div class="input-dock">
+    <div class="input-dock-inner">
+      <label class="dock-label" for="paste-input">Conversation</label>
+      <textarea id="paste-input" placeholder="Paste your conversation here. In Claude or ChatGPT: select all, copy, paste."></textarea>
+      <div class="context-row">
+        <input class="context-input" id="ctx-subject" placeholder="Discipline (optional)" />
+        <input class="context-input" id="ctx-type" placeholder="Work type (optional)" />
+        <input class="context-input" id="ctx-stage" placeholder="Stage (optional)" />
+      </div>
+      <div class="dock-footer">
+        <span class="dock-hint">Paste any conversation log. The framework reads what the exchange actually shows.</span>
+        <button class="btn-evaluate" id="btn-evaluate" onclick="runEvaluation()">Evaluate</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PCA_CORPUS = `Process-Centered Accountability (PCA) is a philosophical framework for evaluating intellectual contributions in AI-assisted work.
+
+PROPERTY vs ACHIEVEMENT: A property is observable in an artifact without reference to its production. An achievement is constituted by the process that produced it.
+
+CREATIVE LOCUS: The point in a human-AI collaboration where the human's specific intellectual contribution changed what was produced. Evidence: the human redirected the AI's framing, introduced domain knowledge the AI did not supply, rejected suggestions in favor of their own direction, synthesized across the exchange into positions the AI did not originate.
+
+INTENTIONALITY-OUTPUT DECOUPLING: When output quality no longer reliably indicates human intentionality.
+
+THE PROCESS GAP: The space between a human's intention and their intellectual engagement with the production process.
+
+HUMAN AGENCY INDICATORS (positive): Human redirects AI framing, introduces original concepts, rejects AI suggestions, synthesizes AI outputs into original positions, provides domain-specific correction, asks generative rather than receptive questions.
+
+LOW AGENCY INDICATORS: Human accepts AI framing without interrogation, submits AI-generated content with minimal revision, shows no evidence their specific intellectual presence changed the output.`;
+
+const EVAL_PROMPT = `You are an evaluator applying the Process-Centered Accountability (PCA) framework to assess human intellectual agency in a human-AI conversation log.
+
+You are NOT evaluating whether AI was used. You are evaluating the QUALITY and PRESENCE of human agency within the collaboration.
+
+FRAMEWORK:
+${PCA_CORPUS}
+
+You will return a structured JSON evaluation. Be precise, fair, and grounded only in what the log actually shows. Do not penalize AI use. Penalize absent human agency.
+
+Return valid JSON only:
+{
+  "score": <integer 0-100, where 100 = maximum human agency, 0 = no traceable human agency>,
+  "tier": <"high" | "medium" | "low">,
+  "tier_label": <"High Human Agency" | "Medium Human Agency" | "Low Human Agency">,
+  "rationale": <2-3 sentences. Plain language. What does this log show about the human's intellectual contribution? Be specific. Do not hedge excessively.>,
+  "trace_moments": [
+    { "label": <short label e.g. "Original Redirection" or "Uncritical Acceptance">, "text": <one sentence describing a specific moment in the log that evidences agency or its absence> },
+    { "label": "...", "text": "..." },
+    { "label": "...", "text": "..." }
+  ],
+  "framework_note": <one sentence: the single most relevant PCA concept at work in this evaluation>
+}`;
+
+async function runEvaluation() {
+  const content = document.getElementById('paste-input').value.trim();
+  if (!content || content.length < 100) {
+    alert('Please paste a conversation to evaluate.');
+    return;
+  }
+
+  const subject = document.getElementById('ctx-subject').value.trim();
+  const type    = document.getElementById('ctx-type').value.trim();
+  const stage   = document.getElementById('ctx-stage').value.trim();
+  const context = [
+    subject && `Discipline: ${subject}`,
+    type    && `Work type: ${type}`,
+    stage   && `Stage: ${stage}`
+  ].filter(Boolean).join('. ');
+
+  document.getElementById('brand-space').classList.add('hidden');
+  document.getElementById('results-space').classList.remove('active');
+  document.getElementById('loading-space').classList.add('active');
+  document.getElementById('btn-evaluate').disabled = true;
+
+  const userMessage = `${context ? 'Context: ' + context + '\n\n' : ''}CONVERSATION LOG:\n\n${content.substring(0, 40000)}`;
+
+  try {
+    const res = await fetch('/api/trace', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        max_tokens: 1200,
+        system: EVAL_PROMPT,
+        messages: [{ role: 'user', content: userMessage }]
+      })
+    });
+    const data = await res.json();
+    const text  = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const match = text.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON returned');
+    showResults(JSON.parse(match[0]));
+  } catch (e) {
+    document.getElementById('loading-space').classList.remove('active');
+    document.getElementById('brand-space').classList.remove('hidden');
+    document.getElementById('btn-evaluate').disabled = false;
+    alert('The evaluation could not be completed. Please try again.');
+  }
+}
+
+function showResults(r) {
+  const score    = Math.min(100, Math.max(0, r.score || 50));
+  const tier     = r.tier || (score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low');
+  const tierLabel = r.tier_label || (
+    tier === 'high' ? 'High Human Agency' :
+    tier === 'medium' ? 'Medium Human Agency' : 'Low Human Agency'
+  );
+
+  const momentsHTML = (r.trace_moments || []).map(m => `
+    <div class="trace-moment">
+      <div class="trace-moment-label">${m.label || ''}</div>
+      <div class="trace-moment-text">${m.text || ''}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('results-inner').innerHTML = `
+    <p class="results-eyebrow">Evaluation Complete</p>
+
+    <div class="score-block">
+      <div class="score-number ${tier}">${score}</div>
+      <div class="score-bar-track">
+        <div class="score-bar-fill ${tier}" id="score-bar" style="width:0%"></div>
+      </div>
+      <div class="score-tier ${tier}">${tierLabel}</div>
+    </div>
+
+    <hr class="section-rule">
+
+    <div class="result-section">
+      <span class="section-label">The Reading</span>
+      <p class="rationale-text">${r.rationale || ''}</p>
+    </div>
+
+    ${momentsHTML ? `
+      <hr class="section-rule">
+      <div class="result-section">
+        <span class="section-label">Trace Moments</span>
+        <div class="trace-moments">${momentsHTML}</div>
+      </div>
+    ` : ''}
+
+    ${r.framework_note ? `
+      <div class="framework-note">
+        <span class="section-label">Framework Note</span>
+        <p class="framework-note-text">${r.framework_note}</p>
+      </div>
+    ` : ''}
+
+    <button class="btn-reset" onclick="resetEval()">Evaluate Another</button>
+  `;
+
+  document.getElementById('loading-space').classList.remove('active');
+  document.getElementById('results-space').classList.add('active');
+  document.getElementById('btn-evaluate').disabled = false;
+
+  setTimeout(() => {
+    const bar = document.getElementById('score-bar');
+    if (bar) bar.style.width = score + '%';
+  }, 300);
+}
+
+function resetEval() {
+  document.getElementById('results-space').classList.remove('active');
+  document.getElementById('results-inner').innerHTML = '';
+  document.getElementById('brand-space').classList.remove('hidden');
+  document.getElementById('paste-input').value = '';
+  document.getElementById('ctx-subject').value = '';
+  document.getElementById('ctx-type').value = '';
+  document.getElementById('ctx-stage').value = '';
+}
+</script>
+</body>
+</html>
