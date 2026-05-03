@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Trace — About</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           #F5F1EC;
+  --bg-subtle:    #EDE9E2;
+  --ink:          #1C1917;
+  --mid:          #5C5248;
+  --light:        #9C8E82;
+  --border:       #DAD4CC;
+  --border-focus: #B5ACA3;
+  --accent:       #7D4E3A;
+  --accent-hover: #6A4030;
+  --high:         #3A6B4A;
+  --medium:       #7A6230;
+  --low:          #8B3A3A;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2.5rem; height: 48px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(245,241,236,0.96);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.nav-brand {
+  font-family: 'Lora', serif;
+  font-size: 0.82rem; letter-spacing: 0.1em;
+  color: var(--ink); text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-links { display: flex; gap: 1.8rem; align-items: center; }
+
+.nav-links a {
+  font-size: 0.7rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--light);
+  text-decoration: none; transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--ink); }
+
+.nav-cta {
+  background: var(--accent); color: var(--bg) !important;
+  padding: 0.45rem 1.2rem; border-radius: 1px;
+  transition: background 0.2s !important;
+}
+.nav-cta:hover { background: var(--accent-hover); color: var(--bg) !important; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 92vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 6rem 2rem 5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-eyebrow {
+  font-size: 0.6rem; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--light);
+  margin-bottom: 2rem; font-weight: 400;
+}
+
+.hero-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-weight: 500; color: var(--ink);
+  letter-spacing: -0.015em; line-height: 1.08;
+  margin-bottom: 2rem; max-width: 18ch;
+}
+
+.hero-title em { font-style: italic; color: var(--accent); }
+
+.hero-sub {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--mid); max-width: 46ch;
+  line-height: 1.85; margin-bottom: 3rem;
+}
+
+.hero-cta {
+  display: flex; gap: 0.8rem;
+  justify-content: center; flex-wrap: wrap;
+}
+
+.btn-primary {
+  background: var(--accent); color: var(--bg);
+  border: none; padding: 0.9rem 2.2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem; font-weight: 500;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  cursor: pointer; text-decoration: none;
+  display: inline-block; border-radius: 1px;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+.btn-secondary {
+  background: transparent; color: var(--mid);
+  border: 1px solid var(--border); padding: 0.9rem 2.2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem; letter-spacing: 0.2em;
+  text-transform: uppercase; cursor: pointer;
+  text-decoration: none; display: inline-block;
+  border-radius: 1px; transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+.hero-anchor {
+  margin-top: 5rem;
+  font-size: 0.6rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--light);
+}
+
+/* ── SECTIONS ── */
+.section {
+  max-width: 700px; margin: 0 auto;
+  padding: 6rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-eyebrow {
+  font-size: 0.58rem; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 1.5rem; display: block;
+}
+
+.section-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 500; color: var(--ink);
+  line-height: 1.25; margin-bottom: 2rem;
+}
+
+.section-body {
+  font-size: 1.02rem; line-height: 1.85;
+  color: var(--mid); margin-bottom: 1.5rem;
+}
+
+.section-body strong { color: var(--ink); font-weight: 500; }
+
+.pull-quote {
+  border-left: 2px solid var(--border-focus);
+  padding: 1rem 0 1rem 1.8rem;
+  margin: 2.5rem 0;
+}
+
+.pull-quote p {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 1.05rem; line-height: 1.85; color: var(--mid);
+}
+
+/* ── HOW IT WORKS ── */
+.steps { display: flex; flex-direction: column; gap: 0; margin-top: 2rem; }
+
+.step {
+  display: flex; gap: 2rem; align-items: flex-start;
+  padding: 2rem 0; border-bottom: 1px solid var(--border);
+}
+.step:first-child { border-top: 1px solid var(--border); }
+
+.step-num {
+  font-family: 'Lora', serif;
+  font-size: 2.5rem; font-weight: 400;
+  color: var(--border-focus); line-height: 1;
+  flex-shrink: 0; padding-top: 0.15rem; min-width: 2.5rem;
+}
+
+.step-title {
+  font-family: 'Lora', serif;
+  font-size: 1.05rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.5rem;
+}
+
+.step-body {
+  font-size: 0.95rem; color: var(--mid); line-height: 1.75;
+}
+
+/* ── OUTPUT CARDS ── */
+.output-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+  margin-top: 2.5rem;
+}
+
+.output-card {
+  background: var(--bg); padding: 1.8rem;
+}
+
+.output-card-label {
+  font-size: 0.58rem; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.output-card-title {
+  font-family: 'Lora', serif;
+  font-size: 1rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.8rem;
+}
+
+.output-card-body {
+  font-size: 0.88rem; color: var(--mid); line-height: 1.75;
+}
+
+/* ── TIERS ── */
+.tiers-section {
+  padding: 6rem 2rem; border-bottom: 1px solid var(--border);
+}
+
+.tiers-inner { max-width: 700px; margin: 0 auto; }
+
+.tiers-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 500; color: var(--ink);
+  margin-bottom: 3rem;
+}
+
+.tier-row {
+  display: flex; gap: 1.5rem; padding: 2rem 0;
+  border-top: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+.tier-badge {
+  font-size: 0.6rem; letter-spacing: 0.25em;
+  text-transform: uppercase; padding: 0.3rem 0.8rem;
+  flex-shrink: 0; margin-top: 0.2rem; border-radius: 1px;
+}
+.tier-badge.high   { background: rgba(58,107,74,0.1);  color: var(--high); }
+.tier-badge.medium { background: rgba(122,98,48,0.1);  color: var(--medium); }
+.tier-badge.low    { background: rgba(139,58,58,0.1);  color: var(--low); }
+
+.tier-title {
+  font-family: 'Lora', serif;
+  font-size: 1rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.5rem;
+}
+
+.tier-body {
+  font-size: 0.9rem; color: var(--mid); line-height: 1.75;
+}
+
+/* ── PRICING ── */
+.pricing-section {
+  padding: 6rem 2rem; border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.pricing-inner { max-width: 700px; margin: 0 auto; }
+
+.pricing-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 500; color: var(--ink); margin-bottom: 0.8rem;
+}
+
+.pricing-sub {
+  font-size: 0.95rem; color: var(--mid); margin-bottom: 3rem;
+  max-width: 54ch;
+}
+
+.pricing-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.pricing-card {
+  background: var(--bg); padding: 2rem 1.5rem;
+}
+
+.pricing-who {
+  font-size: 0.58rem; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--light);
+  margin-bottom: 0.8rem;
+}
+
+.pricing-headline {
+  font-family: 'Lora', serif;
+  font-size: 1rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.6rem;
+  line-height: 1.3;
+}
+
+.pricing-body {
+  font-size: 0.85rem; color: var(--mid);
+  line-height: 1.7; margin-bottom: 1.5rem;
+}
+
+.pricing-price {
+  font-family: 'Lora', serif;
+  font-size: 1.4rem; font-weight: 500;
+  color: var(--accent);
+}
+
+.pricing-unit {
+  font-size: 0.75rem; color: var(--light); margin-left: 0.2rem;
+}
+
+/* ── FRAMEWORK ── */
+.papers-list { margin-top: 2.5rem; }
+
+.paper-item {
+  display: flex; justify-content: space-between;
+  align-items: baseline; padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.paper-item:first-child { border-top: 1px solid var(--border); }
+
+.paper-title {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 1rem; color: var(--ink);
+}
+
+.paper-status {
+  font-size: 0.62rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--light);
+}
+
+/* ── CTA ── */
+.cta-section {
+  min-height: 60vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding: 6rem 2rem 5rem;
+  text-align: center;
+}
+
+.cta-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-weight: 500; color: var(--ink);
+  line-height: 1.15; margin-bottom: 1.2rem;
+}
+
+.cta-sub {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 1rem; color: var(--mid);
+  margin-bottom: 2.5rem; max-width: 42ch;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 2.5rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.footer-brand {
+  font-family: 'Lora', serif; font-size: 0.82rem;
+  font-weight: 500; color: var(--mid);
+}
+
+.footer-links { display: flex; gap: 1.5rem; }
+
+.footer-links a {
+  font-size: 0.7rem; letter-spacing: 0.08em;
+  color: var(--light); text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--ink); }
+
+/* ── REVEAL ── */
+.reveal {
+  opacity: 0; transform: translateY(16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/trace">The Trace</a>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#framework">Framework</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/trace/evaluate" class="nav-cta">Evaluate</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow reveal">Institute for Process-Centered Accountability</p>
+  <h1 class="hero-title reveal">The question is not <em>what</em> was produced.</h1>
+  <p class="hero-sub reveal">It is whether the work carries a traceable chain of original human thought. That is the question AI detection cannot answer. The Trace can.</p>
+  <div class="hero-cta reveal">
+    <a href="/trace/evaluate" class="btn-primary">Evaluate Your Work</a>
+    <a href="#how" class="btn-secondary">How It Works</a>
+  </div>
+  <p class="hero-anchor reveal">↓</p>
+</section>
+
+<!-- PITCH -->
+<section class="section reveal">
+  <span class="section-eyebrow">The Problem</span>
+  <h2 class="section-title">Every detection tool is asking the wrong question.</h2>
+  <p class="section-body">
+    <em>Did AI write this?</em> — that question is becoming unanswerable, and institutions know it. As generation improves, fingerprinting fails. Watermarks are stripped. Detection collapses under legal pressure. Institutions that built policy on detection are left with nothing.
+  </p>
+  <div class="pull-quote">
+    <p>The meaningful question is whether the work carries a traceable chain of original human thought — whether the human was intellectually present in the production of what they submitted.</p>
+  </div>
+  <p class="section-body">
+    The Trace evaluates conversation logs — the actual exchanges between a human and an AI assistant — against a published philosophical framework called <strong>Process-Centered Accountability</strong>. It is not looking for AI fingerprints. It is looking for evidence of intellectual agency.
+  </p>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section reveal" id="how">
+  <span class="section-eyebrow">How It Works</span>
+  <h2 class="section-title">Four steps. One reading.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Export your conversation</div>
+        <div class="step-body">In Claude or ChatGPT, select all and copy your conversation, or use the platform's share and export tools. No account required. No data retained.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Paste it into The Trace</div>
+        <div class="step-body">One field. Paste the conversation. Add optional context — discipline, work type, stage of production — to give the evaluator the frame it needs.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">The framework reads the exchange</div>
+        <div class="step-body">The PCA evaluator examines how the conversation actually moved — where the human led, where the model led, where agency was exercised and where it was absent.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Receive your evaluation</div>
+        <div class="step-body">A Human Agency Score (0–100), a plain language rationale grounded in what the exchange actually shows, and specific trace moments evidencing agency or its absence. No hedging. A reading.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT YOU RECEIVE -->
+<section class="section reveal">
+  <span class="section-eyebrow">The Output</span>
+  <h2 class="section-title">What you receive.</h2>
+  <div class="output-cards">
+    <div class="output-card">
+      <div class="output-card-label">The Score</div>
+      <div class="output-card-title">Human Agency Score</div>
+      <div class="output-card-body">A 0–100 score with a color-coded confidence bar. Green (70+): high agency. Yellow (40–69): mixed. Red (0–39): low agency. Clear. Not probabilistic.</div>
+    </div>
+    <div class="output-card">
+      <div class="output-card-label">The Reading</div>
+      <div class="output-card-title">Plain Language Rationale</div>
+      <div class="output-card-body">Two to three sentences. What does this specific conversation log show about the human's intellectual contribution? Named for what is actually visible in the exchange.</div>
+    </div>
+    <div class="output-card">
+      <div class="output-card-label">The Evidence</div>
+      <div class="output-card-title">Trace Moments</div>
+      <div class="output-card-body">Specific moments in the exchange where agency was present or absent. Grounded in the actual conversation, not in statistical inference about the output.</div>
+    </div>
+    <div class="output-card">
+      <div class="output-card-label">The Framework</div>
+      <div class="output-card-title">PCA Note</div>
+      <div class="output-card-body">One sentence naming the most relevant Process-Centered Accountability concept at work in this evaluation. Grounds the reading in the published theoretical framework.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TIERS -->
+<section class="tiers-section reveal">
+  <div class="tiers-inner">
+    <h2 class="tiers-title">Reading the score.</h2>
+    <div class="tier-row">
+      <span class="tier-badge high">High</span>
+      <div>
+        <div class="tier-title">High Human Agency (70–100)</div>
+        <div class="tier-body">The conversation shows sustained original intellectual contribution. The human redirected the model's framing, introduced knowledge the model did not supply, rejected suggestions in favor of their own direction, or synthesized into positions the model did not originate. The process carries a traceable chain of coherence between the human's thinking and the produced work.</div>
+      </div>
+    </div>
+    <div class="tier-row">
+      <span class="tier-badge medium">Medium</span>
+      <div>
+        <div class="tier-title">Medium Human Agency (40–69)</div>
+        <div class="tier-body">The conversation shows genuine engagement alongside significant reliance on model framing. The human contributed original ideas in places, accepted without interrogation in others. Something is driving the work — the human is present — but the process gap is inconsistent.</div>
+      </div>
+    </div>
+    <div class="tier-row">
+      <span class="tier-badge low">Low</span>
+      <div>
+        <div class="tier-title">Low Human Agency (0–39)</div>
+        <div class="tier-body">The conversation shows minimal original intellectual contribution. The human accepted the model's framing without meaningful interrogation, or showed no evidence that the work required their specific intellectual presence. The output could have been produced without this particular human engaged in this way.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section reveal" id="pricing">
+  <div class="pricing-inner">
+    <h2 class="pricing-title">Who uses The Trace.</h2>
+    <p class="pricing-sub">The framework works wherever intellectual accountability matters.</p>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="pricing-who">Free</div>
+        <div class="pricing-headline">Try The Trace</div>
+        <div class="pricing-body">Three evaluations per month. No account required. Enough to see what the framework finds in your own process.</div>
+        <div class="pricing-price">$0<span class="pricing-unit"> · 30K tokens/mo</span></div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-who">Student</div>
+        <div class="pricing-headline">Graduate Students</div>
+        <div class="pricing-body">Document your process before you're asked to. Build a record of intellectual agency across assignments. When the committee asks, you have an answer grounded in evidence.</div>
+        <div class="pricing-price">$5.99<span class="pricing-unit"> / month · 100K tokens</span></div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-who">Researcher</div>
+        <div class="pricing-headline">Academics & Advisors</div>
+        <div class="pricing-body">Evaluate your own process and your students'. Longer logs, higher volume. Includes PDF report — attach the evaluation to any submission or committee review.</div>
+        <div class="pricing-price">$19.99<span class="pricing-unit"> / month · 400K tokens</span></div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-who">Unlimited</div>
+        <div class="pricing-headline">Departments & Institutions</div>
+        <div class="pricing-body">API access. Bulk evaluation. Integration with existing submission systems. Anonymous evaluation — evaluate process without compromising student privacy.</div>
+        <div class="pricing-price">$149.99<span class="pricing-unit"> / month · unlimited</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FRAMEWORK -->
+<section class="section reveal" id="framework">
+  <span class="section-eyebrow">The Framework</span>
+  <h2 class="section-title">Not a black box.</h2>
+  <p class="section-body">
+    The Trace applies a published philosophical framework developed in aesthetics, process philosophy, and AI accountability. <strong>Process-Centered Accountability</strong> begins with a distinction that has consequences for how we evaluate all work in an AI-mediated world.
+  </p>
+  <p class="section-body">
+    A property is observable in an artifact without reference to its production. An achievement is constituted by the process that produced it. A work can be clear, original, rigorous — those are properties. It can also be the result of genuine intellectual work — that is an achievement. The output alone cannot tell you which it is.
+  </p>
+  <div class="pull-quote">
+    <p>When AI generates content, the question is not what was produced but where the human exercised determining judgment. The creative locus — the point where the human's specific intellectual contribution changed what was produced — is either present or absent. The Trace finds it.</p>
+  </div>
+  <div class="papers-list">
+    <div class="paper-item">
+      <span class="paper-title">Marks Without Hands: Generative AI and the Dissolution of Aesthetic Trace-Reading</span>
+      <span class="paper-status">Live · SSRN 6362278</span>
+    </div>
+    <div class="paper-item">
+      <span class="paper-title">The Broken Window: Aesthetic Intelligibility as Institutional Infrastructure</span>
+      <span class="paper-status">Live · SSRN 6362578</span>
+    </div>
+    <div class="paper-item">
+      <span class="paper-title">Beyond the Authorization Horizon: Institute for Process-Centered Accountability</span>
+      <span class="paper-status">Live · SSRN 6571286</span>
+    </div>
+    <div class="paper-item">
+      <span class="paper-title">Transmission Without Formation</span>
+      <span class="paper-status">Forthcoming</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section reveal">
+  <h2 class="cta-title">The trace is there.<br>Or it isn't.</h2>
+  <p class="cta-sub">Run your first evaluation. See what the framework finds in your own process.</p>
+  <a href="/trace/evaluate" class="btn-primary">Evaluate Your Work</a>
+</section>
+
+<footer>
+  <span class="footer-brand">The Trace · candle.codes</span>
+  <div class="footer-links">
+    <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6362278" target="_blank">Marks Without Hands</a>
+    <a href="https://candle.codes">candle.codes</a>
+    <a href="mailto:vicente@candle.codes">Contact</a>
+  </div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.08 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
