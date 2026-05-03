@@ -3,1228 +3,622 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Temple — candle.codes</title>
+<title>The Trace — About</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #050510;
-    --bg-mid: #0a0a1a;
-    --gold: #C9A84C;
-    --gold-dim: rgba(201,168,76,0.15);
-    --gold-faint: rgba(201,168,76,0.06);
-    --parchment: #E8D5B7;
-    --ash: #8B7355;
-  }
+:root {
+  --bg:           #F5F1EC;
+  --bg-subtle:    #EDE9E2;
+  --ink:          #1C1917;
+  --mid:          #5C5248;
+  --light:        #9C8E82;
+  --border:       #DAD4CC;
+  --border-focus: #B5ACA3;
+  --accent:       #7D4E3A;
+  --accent-hover: #6A4030;
+  --high:         #3A6B4A;
+  --medium:       #7A6230;
+  --low:          #8B3A3A;
+}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    background: var(--bg);
-    color: var(--parchment);
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+}
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 1000;
-    opacity: 0.6;
-  }
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000;
+}
 
-  canvas#stars {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-  }
+/* ── NAV ── */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2.5rem; height: 48px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(245,241,236,0.96);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(8px);
+}
 
-  .screen { display: none; }
-  .screen.active {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 3rem 2rem;
-    position: relative;
-    z-index: 1;
-  }
+.nav-brand {
+  font-family: 'Lora', serif;
+  font-size: 0.82rem; letter-spacing: 0.1em;
+  color: var(--ink); text-decoration: none;
+  font-weight: 500;
+}
 
-  @keyframes breathe {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.06); }
-  }
-  @keyframes turn { to { transform: rotate(360deg); } }
-  @keyframes counter-turn { to { transform: translate(-50%,-50%) rotate(-360deg); } }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+.nav-links { display: flex; gap: 1.8rem; align-items: center; }
 
-  /* ── ENTRY ── */
-  .entry-eyebrow {
-    font-family: 'Cinzel', serif;
-    font-size: 0.58rem;
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.65;
-    text-align: center;
-    margin-bottom: 3rem;
-  }
-  .entry-symbol {
-    font-size: 2.2rem;
-    margin-bottom: 2.5rem;
-    opacity: 0.5;
-    animation: breathe 5s ease-in-out infinite;
-    display: block;
-    text-align: center;
-    color: var(--gold);
-  }
-  .entry-title {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 400;
-    color: var(--parchment);
-    letter-spacing: 0.1em;
-    text-align: center;
-    margin-bottom: 1rem;
-  }
-  .entry-subtitle {
-    font-size: 1.05rem;
-    font-style: italic;
-    color: var(--ash);
-    max-width: 38ch;
-    line-height: 1.9;
-    text-align: center;
-    margin-bottom: 3.5rem;
-  }
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-    max-width: 400px;
-    margin-bottom: 1.5rem;
-  }
-  label {
-    font-family: 'Cinzel', serif;
-    font-size: 0.58rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.7;
-  }
-  input {
-    background: rgba(201,168,76,0.04);
-    border: 1px solid rgba(201,168,76,0.2);
-    color: var(--parchment);
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem;
-    padding: 0.9rem 1.2rem;
-    width: 100%;
-    outline: none;
-    transition: border-color 0.3s;
-    -webkit-appearance: none;
-    border-radius: 0;
-  }
-  input:focus { border-color: rgba(201,168,76,0.5); }
-  input::placeholder { color: rgba(232,213,183,0.2); font-style: italic; }
-  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5) sepia(1) saturate(2); opacity: 0.4; }
+.nav-links a {
+  font-size: 0.7rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--light);
+  text-decoration: none; transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--ink); }
 
-  .form-note {
-    font-size: 0.72rem;
-    font-style: italic;
-    color: var(--ash);
-    opacity: 0.5;
-    text-align: center;
-    max-width: 36ch;
-    line-height: 1.65;
-    margin-bottom: 2.5rem;
-  }
-  .btn-gold {
-    background: var(--gold);
-    color: var(--bg);
-    border: none;
-    padding: 1rem 3rem;
-    font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    text-decoration: none;
-    display: inline-block;
-  }
-  .btn-gold:hover { background: #d4b86a; transform: translateY(-1px); }
-  .btn-gold:disabled { opacity: 0.4; cursor: default; transform: none; }
+.nav-cta {
+  background: var(--accent); color: var(--bg) !important;
+  padding: 0.45rem 1.2rem; border-radius: 1px;
+  transition: background 0.2s !important;
+}
+.nav-cta:hover { background: var(--accent-hover); color: var(--bg) !important; }
 
-  .btn-ghost {
-    background: transparent;
-    color: var(--ash);
-    border: 1px solid rgba(201,168,76,0.15);
-    padding: 0.75rem 2rem;
-    font-family: 'Cinzel', serif;
-    font-size: 0.6rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-top: 1rem;
-  }
-  .btn-ghost:hover { color: var(--gold); border-color: rgba(201,168,76,0.4); }
+/* ── HERO ── */
+.hero {
+  min-height: 92vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 6rem 2rem 5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
 
-  /* ── TURNING ── */
-  .turning-wrap { text-align: center; }
-  .turning-circle {
-    width: 108px; height: 108px;
-    border: 1px solid rgba(201,168,76,0.2);
-    border-top-color: var(--gold);
-    border-radius: 50%;
-    animation: turn 2.2s linear infinite;
-    position: relative;
-    margin: 0 auto 2rem;
-  }
-  .turning-circle::before {
-    content: '✦';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
-    font-size: 1.3rem;
-    color: var(--gold);
-    animation: counter-turn 2.2s linear infinite;
-  }
-  .turning-label {
-    font-family: 'Cinzel', serif;
-    font-size: 0.62rem;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.55;
-  }
-  .turning-name {
-    font-size: 1.35rem;
-    font-style: italic;
-    color: var(--parchment);
-    opacity: 0.4;
-    margin-top: 0.6rem;
-  }
+.hero-eyebrow {
+  font-size: 0.6rem; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--light);
+  margin-bottom: 2rem; font-weight: 400;
+}
 
-  /* ── TEMPLE ── */
-  #screen-temple { justify-content: flex-start; padding: 0; }
+.hero-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-weight: 500; color: var(--ink);
+  letter-spacing: -0.015em; line-height: 1.08;
+  margin-bottom: 2rem; max-width: 18ch;
+}
 
-  .nave {
-    width: 100%; max-width: 700px;
-    margin: 0 auto;
-    padding: 6rem 2rem 5rem;
-    text-align: center;
-    opacity: 0;
-    animation: fadeUp 1.4s ease forwards;
-    animation-delay: 0.3s;
-  }
-  .nave-eyebrow {
-    font-family: 'Cinzel', serif;
-    font-size: 0.56rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.55;
-    margin-bottom: 1.8rem;
-  }
-  .nave-name {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(1.8rem, 5vw, 3rem);
-    font-weight: 400;
-    color: var(--parchment);
-    letter-spacing: 0.1em;
-    margin-bottom: 0.6rem;
-  }
-  .nave-numbers {
-    font-family: 'Cinzel', serif;
-    font-size: 0.62rem;
-    letter-spacing: 0.2em;
-    color: var(--gold);
-    opacity: 0.6;
-    margin-bottom: 3.5rem;
-  }
-  .nave-text {
-    font-size: clamp(1rem, 1.8vw, 1.2rem);
-    line-height: 2.0;
-    color: var(--parchment);
-    max-width: 54ch;
-    margin: 0 auto 2.5rem;
-  }
-  .nave-closing {
-    font-size: 1.05rem;
-    font-style: italic;
-    color: var(--ash);
-    max-width: 42ch;
-    margin: 0 auto;
-    line-height: 1.8;
-    opacity: 0.85;
-  }
+.hero-title em { font-style: italic; color: var(--accent); }
 
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    max-width: 420px;
-    margin: 0 auto;
-    padding: 0 2rem;
-  }
-  .divider-line { flex: 1; height: 1px; background: rgba(201,168,76,0.12); }
-  .divider-mark { font-size: 0.55rem; color: var(--gold); opacity: 0.35; letter-spacing: 0.1em; }
+.hero-sub {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--mid); max-width: 46ch;
+  line-height: 1.85; margin-bottom: 3rem;
+}
 
-  /* Rooms */
-  .rooms-section {
-    width: 100%; max-width: 700px;
-    margin: 0 auto;
-    padding: 4.5rem 2rem 3rem;
-  }
-  .rooms-eyebrow {
-    font-family: 'Cinzel', serif;
-    font-size: 0.56rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.45;
-    text-align: center;
-    margin-bottom: 3rem;
-  }
+.hero-cta {
+  display: flex; gap: 0.8rem;
+  justify-content: center; flex-wrap: wrap;
+}
 
-  .room-card {
-    border: 1px solid rgba(201,168,76,0.1);
-    padding: 1.8rem 1.8rem 1.8rem 1.5rem;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 1.5rem;
-    text-decoration: none;
-    color: inherit;
-    position: relative;
-    cursor: pointer;
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity 0.8s ease, transform 0.8s ease, border-color 0.3s, background 0.3s;
-  }
-  .room-card.revealed { opacity: 1; transform: translateY(0); }
-  .room-card:hover { border-color: rgba(201,168,76,0.32); background: rgba(201,168,76,0.025); }
-  .room-card.locked {
-    opacity: 0 !important;
-    pointer-events: none;
-    position: absolute;
-    visibility: hidden;
-  }
-  .room-card.locked.revealed {
-    opacity: 1 !important;
-    position: relative;
-    visibility: visible;
-    pointer-events: auto;
-  }
-  .room-card.locked.revealed {
-    border-color: rgba(201,168,76,0.06);
-    cursor: default;
-  }
-  .room-card.locked.revealed:hover {
-    border-color: rgba(201,168,76,0.12);
-    background: rgba(201,168,76,0.01);
-  }
-  .room-card.locked.revealed .room-symbol { opacity: 0.2; }
-  .room-card.locked.revealed .room-name { opacity: 0.4; }
-  .room-card.locked.revealed .room-quality { opacity: 0.3; }
-  .room-card.locked.revealed .room-note { opacity: 0.25; }
+.btn-primary {
+  background: var(--accent); color: var(--bg);
+  border: none; padding: 0.9rem 2.2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem; font-weight: 500;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  cursor: pointer; text-decoration: none;
+  display: inline-block; border-radius: 1px;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
 
-  .room-card.paywall-locked.revealed .room-name { opacity: 0.55; }
-  .room-card.paywall-locked.revealed .room-symbol { opacity: 0.35; }
-  .room-card.paywall-locked.revealed {
-    border-color: rgba(201,168,76,0.12);
-    cursor: pointer;
-  }
-  .room-card.paywall-locked.revealed:hover {
-    border-color: rgba(201,168,76,0.25);
-    background: rgba(201,168,76,0.02);
-  }
+.btn-secondary {
+  background: transparent; color: var(--mid);
+  border: 1px solid var(--border); padding: 0.9rem 2.2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem; letter-spacing: 0.2em;
+  text-transform: uppercase; cursor: pointer;
+  text-decoration: none; display: inline-block;
+  border-radius: 1px; transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
 
-  .room-card.visited { border-color: rgba(201,168,76,0.07); }
-  .room-card.visited .room-symbol { opacity: 0.35; }
-  .room-card.visited .room-name { opacity: 0.65; }
+.hero-anchor {
+  margin-top: 5rem;
+  font-size: 0.6rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--light);
+}
 
-  .room-symbol {
-    font-size: 1.3rem;
-    color: var(--gold);
-    opacity: 0.65;
-    min-width: 1.8rem;
-    text-align: center;
-    padding-top: 0.15rem;
-  }
-  .room-body { flex: 1; }
-  .room-name {
-    font-family: 'Cinzel', serif;
-    font-size: 0.88rem;
-    letter-spacing: 0.1em;
-    color: var(--parchment);
-    margin-bottom: 0.28rem;
-  }
-  .room-quality {
-    font-size: 0.76rem;
-    font-style: italic;
-    color: var(--ash);
-    margin-bottom: 0.65rem;
-  }
-  .room-note {
-    font-size: 0.88rem;
-    color: rgba(232,213,183,0.55);
-    line-height: 1.7;
-  }
-  .room-badge {
-    font-family: 'Cinzel', serif;
-    font-size: 0.5rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.75;
-    position: absolute;
-    top: 0.75rem;
-    right: 1.2rem;
-  }
-  .room-badge.locked-badge { color: var(--ash); opacity: 0.35; }
-  .room-badge.visited-badge { color: var(--ash); opacity: 0.35; }
-  .room-badge.paywall-badge { color: #C9A84C; opacity: 0.55; }
+/* ── SECTIONS ── */
+.section {
+  max-width: 700px; margin: 0 auto;
+  padding: 6rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
 
-  .room-arrow {
-    font-size: 0.85rem;
-    color: var(--gold);
-    opacity: 0.35;
-    align-self: center;
-    transition: opacity 0.3s, transform 0.3s;
-    flex-shrink: 0;
-  }
-  .room-card:not(.locked):not(.paywall-locked):hover .room-arrow {
-    opacity: 0.75;
-    transform: translateX(4px);
-  }
+.section-eyebrow {
+  font-size: 0.58rem; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 1.5rem; display: block;
+}
 
-  /* Paywall divider */
-  .paywall-divider {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 2rem 0 1.5rem;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 1s ease, transform 1s ease;
-  }
-  .paywall-divider.revealed { opacity: 1; transform: translateY(0); }
-  .paywall-divider-line { flex: 1; height: 1px; background: rgba(201,168,76,0.08); }
-  .paywall-divider-text {
-    font-family: 'Cinzel', serif;
-    font-size: 0.48rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--ash);
-    opacity: 0.4;
-    white-space: nowrap;
-  }
+.section-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 500; color: var(--ink);
+  line-height: 1.25; margin-bottom: 2rem;
+}
 
-  /* Inner Sanctum */
-  .sanctum-section {
-    width: 100%; max-width: 700px;
-    margin: 0 auto;
-    padding: 1rem 2rem 4rem;
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity 1.2s ease, transform 1.2s ease;
-  }
-  .sanctum-section.revealed { opacity: 1; transform: translateY(0); }
+.section-body {
+  font-size: 1.02rem; line-height: 1.85;
+  color: var(--mid); margin-bottom: 1.5rem;
+}
 
-  .sanctum-wrap {
-    border: 1px solid rgba(201,168,76,0.18);
-    padding: 2.8rem 2rem;
-    text-align: center;
-  }
-  .sanctum-eyebrow {
-    font-family: 'Cinzel', serif;
-    font-size: 0.56rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.55;
-    margin-bottom: 1.4rem;
-  }
-  .sanctum-text {
-    font-size: 0.98rem;
-    font-style: italic;
-    color: var(--ash);
-    line-height: 1.85;
-    max-width: 44ch;
-    margin: 0 auto 2.2rem;
-  }
-  .sanctum-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.2rem;
-    justify-content: center;
-    margin-bottom: 2rem;
-  }
-  .sanctum-link {
-    font-family: 'Cinzel', serif;
-    font-size: 0.55rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.45;
-    text-decoration: none;
-    transition: opacity 0.3s;
-  }
-  .sanctum-link:hover { opacity: 0.85; }
-  .sanctum-link.dim { color: var(--ash); opacity: 0.25; cursor: default; }
+.section-body strong { color: var(--ink); font-weight: 500; }
 
-  .sanctum-card {
-    border: 1px solid rgba(201,168,76,0.12);
-    padding: 1.8rem 2rem;
-    transition: border-color 0.3s, background 0.3s;
-  }
-  .sanctum-card:hover { border-color: rgba(201,168,76,0.28); background: rgba(201,168,76,0.02); }
-  .sanctum-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.8rem;
-  }
-  .sanctum-card-tier {
-    font-family: 'Cinzel', serif;
-    font-size: 0.5rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.55;
-  }
-  .sanctum-card-price {
-    font-family: 'Cinzel', serif;
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    color: var(--gold);
-    opacity: 0.7;
-  }
-  .sanctum-card-name {
-    font-family: 'Cinzel', serif;
-    font-size: 0.95rem;
-    font-weight: 400;
-    letter-spacing: 0.08em;
-    color: var(--parchment);
-    margin-bottom: 0.6rem;
-  }
-  .sanctum-card-desc {
-    font-size: 0.88rem;
-    color: rgba(232,213,183,0.55);
-    line-height: 1.75;
-    margin-bottom: 1rem;
-  }
-  .sanctum-card-link {
-    font-family: 'Cinzel', serif;
-    font-size: 0.55rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--gold);
-    text-decoration: none;
-    opacity: 0.6;
-    transition: opacity 0.3s;
-  }
-  .sanctum-card-link:hover { opacity: 1; }
+.pull-quote {
+  border-left: 2px solid var(--border-focus);
+  padding: 1rem 0 1rem 1.8rem;
+  margin: 2.5rem 0;
+}
 
-  .temple-footer {
-    text-align: center;
-    padding: 2.5rem 2rem 3rem;
-    font-family: 'Cinzel', serif;
-    font-size: 0.5rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgba(139,115,85,0.25);
-  }
+.pull-quote p {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 1.05rem; line-height: 1.85; color: var(--mid);
+}
 
-  /* ── PAYWALL MODAL ── */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(5,5,16,0.92);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-  }
-  .modal-overlay.active { display: flex; }
+/* ── HOW IT WORKS ── */
+.steps { display: flex; flex-direction: column; gap: 0; margin-top: 2rem; }
 
-  .modal-box {
-    background: #0a0a1a;
-    border: 1px solid rgba(201,168,76,0.2);
-    max-width: 440px;
-    width: 100%;
-    padding: 3rem 2.5rem;
-    text-align: center;
-    position: relative;
-    animation: fadeUp 0.5s ease forwards;
-  }
-  .modal-close {
-    position: absolute;
-    top: 1rem; right: 1.2rem;
-    background: none; border: none;
-    color: var(--ash);
-    font-size: 1.2rem;
-    cursor: pointer;
-    opacity: 0.5;
-    transition: opacity 0.3s;
-  }
-  .modal-close:hover { opacity: 1; }
-  .modal-eyebrow {
-    font-family: 'Cinzel', serif;
-    font-size: 0.56rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.55;
-    margin-bottom: 1.5rem;
-  }
-  .modal-title {
-    font-family: 'Cinzel', serif;
-    font-size: 1.4rem;
-    font-weight: 400;
-    color: var(--parchment);
-    letter-spacing: 0.08em;
-    margin-bottom: 1rem;
-  }
-  .modal-desc {
-    font-size: 0.95rem;
-    font-style: italic;
-    color: var(--ash);
-    line-height: 1.8;
-    margin-bottom: 2rem;
-    max-width: 36ch;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .modal-price {
-    font-family: 'Cinzel', serif;
-    font-size: 1.6rem;
-    color: var(--gold);
-    margin-bottom: 0.4rem;
-  }
-  .modal-price-note {
-    font-size: 0.72rem;
-    color: var(--ash);
-    opacity: 0.6;
-    margin-bottom: 2rem;
-  }
-  .modal-token-note {
-    font-size: 0.68rem;
-    font-style: italic;
-    color: rgba(139,115,85,0.4);
-    margin-top: 1.5rem;
-    line-height: 1.6;
-  }
+.step {
+  display: flex; gap: 2rem; align-items: flex-start;
+  padding: 2rem 0; border-bottom: 1px solid var(--border);
+}
+.step:first-child { border-top: 1px solid var(--border); }
+
+.step-num {
+  font-family: 'Lora', serif;
+  font-size: 2.5rem; font-weight: 400;
+  color: var(--border-focus); line-height: 1;
+  flex-shrink: 0; padding-top: 0.15rem; min-width: 2.5rem;
+}
+
+.step-title {
+  font-family: 'Lora', serif;
+  font-size: 1.05rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.5rem;
+}
+
+.step-body {
+  font-size: 0.95rem; color: var(--mid); line-height: 1.75;
+}
+
+/* ── OUTPUT CARDS ── */
+.output-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+  margin-top: 2.5rem;
+}
+
+.output-card {
+  background: var(--bg); padding: 1.8rem;
+}
+
+.output-card-label {
+  font-size: 0.58rem; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.output-card-title {
+  font-family: 'Lora', serif;
+  font-size: 1rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.8rem;
+}
+
+.output-card-body {
+  font-size: 0.88rem; color: var(--mid); line-height: 1.75;
+}
+
+/* ── TIERS ── */
+.tiers-section {
+  padding: 6rem 2rem; border-bottom: 1px solid var(--border);
+}
+
+.tiers-inner { max-width: 700px; margin: 0 auto; }
+
+.tiers-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 500; color: var(--ink);
+  margin-bottom: 3rem;
+}
+
+.tier-row {
+  display: flex; gap: 1.5rem; padding: 2rem 0;
+  border-top: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+.tier-badge {
+  font-size: 0.6rem; letter-spacing: 0.25em;
+  text-transform: uppercase; padding: 0.3rem 0.8rem;
+  flex-shrink: 0; margin-top: 0.2rem; border-radius: 1px;
+}
+.tier-badge.high   { background: rgba(58,107,74,0.1);  color: var(--high); }
+.tier-badge.medium { background: rgba(122,98,48,0.1);  color: var(--medium); }
+.tier-badge.low    { background: rgba(139,58,58,0.1);  color: var(--low); }
+
+.tier-title {
+  font-family: 'Lora', serif;
+  font-size: 1rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.5rem;
+}
+
+.tier-body {
+  font-size: 0.9rem; color: var(--mid); line-height: 1.75;
+}
+
+/* ── PRICING ── */
+.pricing-section {
+  padding: 6rem 2rem; border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.pricing-inner { max-width: 700px; margin: 0 auto; }
+
+.pricing-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 500; color: var(--ink); margin-bottom: 0.8rem;
+}
+
+.pricing-sub {
+  font-size: 0.95rem; color: var(--mid); margin-bottom: 3rem;
+  max-width: 54ch;
+}
+
+.pricing-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.pricing-card {
+  background: var(--bg); padding: 2rem 1.5rem;
+}
+
+.pricing-who {
+  font-size: 0.58rem; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--light);
+  margin-bottom: 0.8rem;
+}
+
+.pricing-headline {
+  font-family: 'Lora', serif;
+  font-size: 1rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.6rem;
+  line-height: 1.3;
+}
+
+.pricing-body {
+  font-size: 0.85rem; color: var(--mid);
+  line-height: 1.7; margin-bottom: 1.5rem;
+}
+
+.pricing-price {
+  font-family: 'Lora', serif;
+  font-size: 1.4rem; font-weight: 500;
+  color: var(--accent);
+}
+
+.pricing-unit {
+  font-size: 0.75rem; color: var(--light); margin-left: 0.2rem;
+}
+
+/* ── FRAMEWORK ── */
+.papers-list { margin-top: 2.5rem; }
+
+.paper-item {
+  display: flex; justify-content: space-between;
+  align-items: baseline; padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.paper-item:first-child { border-top: 1px solid var(--border); }
+
+.paper-title {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 1rem; color: var(--ink);
+}
+
+.paper-status {
+  font-size: 0.62rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--light);
+}
+
+/* ── CTA ── */
+.cta-section {
+  min-height: 60vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding: 6rem 2rem 5rem;
+  text-align: center;
+}
+
+.cta-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-weight: 500; color: var(--ink);
+  line-height: 1.15; margin-bottom: 1.2rem;
+}
+
+.cta-sub {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 1rem; color: var(--mid);
+  margin-bottom: 2.5rem; max-width: 42ch;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 2.5rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.footer-brand {
+  font-family: 'Lora', serif; font-size: 0.82rem;
+  font-weight: 500; color: var(--mid);
+}
+
+.footer-links { display: flex; gap: 1.5rem; }
+
+.footer-links a {
+  font-size: 0.7rem; letter-spacing: 0.08em;
+  color: var(--light); text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--ink); }
+
+/* ── REVEAL ── */
+.reveal {
+  opacity: 0; transform: translateY(16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible { opacity: 1; transform: none; }
 </style>
 </head>
 <body>
 
-<canvas id="stars"></canvas>
-
-<!-- ═══════════════════════════════════════ -->
-<!-- ENTRY: THE KEY                         -->
-<!-- ═══════════════════════════════════════ -->
-<div id="screen-entry" class="screen active">
-  <p class="entry-eyebrow">candle.codes</p>
-  <span class="entry-symbol">✦</span>
-  <h1 class="entry-title">The Key</h1>
-  <p class="entry-subtitle">Six instruments. One path. Enter with your name and the date you arrived in the world.</p>
-
-  <div class="form-group">
-    <label for="full-name">Full Name</label>
-    <input type="text" id="full-name" placeholder="as given at birth" autocomplete="off" spellcheck="false">
+<nav>
+  <a class="nav-brand" href="/trace">The Trace</a>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#framework">Framework</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/trace/evaluate" class="nav-cta">Evaluate</a>
   </div>
+</nav>
 
-  <div class="form-group">
-    <label for="birth-date">Date of Birth</label>
-    <input type="date" id="birth-date">
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow reveal">Institute for Process-Centered Accountability</p>
+  <h1 class="hero-title reveal">The question is not <em>what</em> was produced.</h1>
+  <p class="hero-sub reveal">It is whether the work carries a traceable chain of original human thought. That is the question AI detection cannot answer. The Trace can.</p>
+  <div class="hero-cta reveal">
+    <a href="/trace/evaluate" class="btn-primary">Evaluate Your Work</a>
+    <a href="#how" class="btn-secondary">How It Works</a>
   </div>
+  <p class="hero-anchor reveal">↓</p>
+</section>
 
-  <p class="form-note">The numbers are computed from your name and birthdate. Nothing is stored or transmitted.</p>
-
-  <button class="btn-gold" onclick="enterTemple()">Enter</button>
-</div>
-
-<!-- ═══════════════════════════════════════ -->
-<!-- TURNING                                -->
-<!-- ═══════════════════════════════════════ -->
-<div id="screen-turning" class="screen">
-  <div class="turning-wrap">
-    <div class="turning-circle"></div>
-    <p class="turning-label">The key is turning</p>
-    <p class="turning-name" id="turning-name-display"></p>
+<!-- PITCH -->
+<section class="section reveal">
+  <span class="section-eyebrow">The Problem</span>
+  <h2 class="section-title">Every detection tool is asking the wrong question.</h2>
+  <p class="section-body">
+    <em>Did AI write this?</em> — that question is becoming unanswerable, and institutions know it. As generation improves, fingerprinting fails. Watermarks are stripped. Detection collapses under legal pressure. Institutions that built policy on detection are left with nothing.
+  </p>
+  <div class="pull-quote">
+    <p>The meaningful question is whether the work carries a traceable chain of original human thought — whether the human was intellectually present in the production of what they submitted.</p>
   </div>
-</div>
+  <p class="section-body">
+    The Trace evaluates conversation logs — the actual exchanges between a human and an AI assistant — against a published philosophical framework called <strong>Process-Centered Accountability</strong>. It is not looking for AI fingerprints. It is looking for evidence of intellectual agency.
+  </p>
+</section>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- TEMPLE INTERIOR                        -->
-<!-- ═══════════════════════════════════════ -->
-<div id="screen-temple" class="screen">
-
-  <div class="nave" id="nave-section">
-    <p class="nave-eyebrow">The Temple Opens</p>
-    <h2 class="nave-name" id="nave-name"></h2>
-    <p class="nave-numbers" id="nave-numbers"></p>
-    <p class="nave-text" id="nave-text"></p>
-    <p class="nave-closing" id="nave-closing"></p>
-  </div>
-
-  <div class="divider">
-    <div class="divider-line"></div>
-    <span class="divider-mark">✦</span>
-    <div class="divider-line"></div>
-  </div>
-
-  <div class="rooms-section">
-    <p class="rooms-eyebrow">The Instruments</p>
-    <div id="rooms-container"></div>
-  </div>
-
-  <div class="sanctum-section" id="sanctum-section">
-
-    <div class="sanctum-wrap" style="margin-bottom:1.5rem;">
-      <p class="sanctum-eyebrow">The Inner Sanctum</p>
-      <p class="sanctum-text">The work that follows visibility. For those who have moved through the instruments and want to bring the framework to bear on what they are building.</p>
-    </div>
-
-    <!-- Consulting engagements -->
-    <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;">
-
-      <div class="sanctum-card">
-        <div class="sanctum-card-header">
-          <span class="sanctum-card-tier">Strategic</span>
-          <span class="sanctum-card-price">$2,500</span>
-        </div>
-        <h4 class="sanctum-card-name">The Oracle</h4>
-        <p class="sanctum-card-desc">The framework applied to your organization. The four diagnostic questions embedded into your decision-making architecture — not a report but a working instrument, with implementation guidance and an advisory session included.</p>
-        <a href="mailto:vince.hinojosa@gmail.com?subject=The Oracle Inquiry" class="sanctum-card-link">Engage →</a>
-      </div>
-
-      <div class="sanctum-card">
-        <div class="sanctum-card-header">
-          <span class="sanctum-card-tier">Advisory</span>
-          <span class="sanctum-card-price">$1,500 / session</span>
-        </div>
-        <h4 class="sanctum-card-name">Advisory Session</h4>
-        <p class="sanctum-card-desc">A focused 90-minute working session. The framework applied directly to your specific situation — product decisions, creative policy, institutional governance, or a live accountability question.</p>
-        <a href="mailto:vince.hinojosa@gmail.com?subject=Advisory Session Request" class="sanctum-card-link">Book a Session →</a>
-      </div>
-
-      <div class="sanctum-card">
-        <div class="sanctum-card-header">
-          <span class="sanctum-card-tier">Premium</span>
-          <span class="sanctum-card-price">$4,500 / mo</span>
-        </div>
-        <h4 class="sanctum-card-name">Ongoing Advisory</h4>
-        <p class="sanctum-card-desc">Monthly retainer for organizations building AI-mediated creative products. Continuous access to the framework, ongoing evaluation as your systems evolve, and strategic positioning as standards form in real time.</p>
-        <a href="mailto:vince.hinojosa@gmail.com?subject=Ongoing Advisory Inquiry" class="sanctum-card-link">Explore Retainer →</a>
-      </div>
-
-    </div>
-
-    <!-- Aesthetic Audit -->
-    <div class="sanctum-wrap" style="border-color:rgba(201,168,76,0.25);margin-bottom:1.5rem;">
-      <p class="sanctum-eyebrow">For organizations requiring a complete formal evaluation</p>
-      <a href="mailto:vince.hinojosa@gmail.com?subject=Aesthetic Audit Inquiry" class="btn-gold" style="margin-top:0.5rem;">Book an Aesthetic Audit</a>
-    </div>
-
-    <!-- Published work -->
-    <div class="sanctum-wrap" style="border-color:rgba(201,168,76,0.07);text-align:left;padding:2rem;">
-      <p class="sanctum-card-tier" style="margin-bottom:1rem;">The Ground</p>
-      <div class="sanctum-links">
-        <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6362278" target="_blank" class="sanctum-link">Marks Without Hands →</a>
-        <span class="sanctum-link dim">The Broken Window · under review</span>
-        <span class="sanctum-link dim">Transmission Without Formation · forthcoming</span>
+<!-- HOW IT WORKS -->
+<section class="section reveal" id="how">
+  <span class="section-eyebrow">How It Works</span>
+  <h2 class="section-title">Four steps. One reading.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Export your conversation</div>
+        <div class="step-body">In Claude or ChatGPT, select all and copy your conversation, or use the platform's share and export tools. No account required. No data retained.</div>
       </div>
     </div>
-
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Paste it into The Trace</div>
+        <div class="step-body">One field. Paste the conversation. Add optional context — discipline, work type, stage of production — to give the evaluator the frame it needs.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">The framework reads the exchange</div>
+        <div class="step-body">The PCA evaluator examines how the conversation actually moved — where the human led, where the model led, where agency was exercised and where it was absent.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Receive your evaluation</div>
+        <div class="step-body">A Human Agency Score (0–100), a plain language rationale grounded in what the exchange actually shows, and specific trace moments evidencing agency or its absence. No hedging. A reading.</div>
+      </div>
+    </div>
   </div>
+</section>
 
-  <footer class="temple-footer">
-    Vicente Hinojosa &nbsp;·&nbsp; Institute for Process-Centered Accountability &nbsp;·&nbsp; candle.codes
-  </footer>
-</div>
+<!-- WHAT YOU RECEIVE -->
+<section class="section reveal">
+  <span class="section-eyebrow">The Output</span>
+  <h2 class="section-title">What you receive.</h2>
+  <div class="output-cards">
+    <div class="output-card">
+      <div class="output-card-label">The Score</div>
+      <div class="output-card-title">Human Agency Score</div>
+      <div class="output-card-body">A 0–100 score with a color-coded confidence bar. Green (70+): high agency. Yellow (40–69): mixed. Red (0–39): low agency. Clear. Not probabilistic.</div>
+    </div>
+    <div class="output-card">
+      <div class="output-card-label">The Reading</div>
+      <div class="output-card-title">Plain Language Rationale</div>
+      <div class="output-card-body">Two to three sentences. What does this specific conversation log show about the human's intellectual contribution? Named for what is actually visible in the exchange.</div>
+    </div>
+    <div class="output-card">
+      <div class="output-card-label">The Evidence</div>
+      <div class="output-card-title">Trace Moments</div>
+      <div class="output-card-body">Specific moments in the exchange where agency was present or absent. Grounded in the actual conversation, not in statistical inference about the output.</div>
+    </div>
+    <div class="output-card">
+      <div class="output-card-label">The Framework</div>
+      <div class="output-card-title">PCA Note</div>
+      <div class="output-card-body">One sentence naming the most relevant Process-Centered Accountability concept at work in this evaluation. Grounds the reading in the published theoretical framework.</div>
+    </div>
+  </div>
+</section>
 
-<!-- Paywall modal removed — each instrument handles its own per-use payment -->
+<!-- TIERS -->
+<section class="tiers-section reveal">
+  <div class="tiers-inner">
+    <h2 class="tiers-title">Reading the score.</h2>
+    <div class="tier-row">
+      <span class="tier-badge high">High</span>
+      <div>
+        <div class="tier-title">High Human Agency (70–100)</div>
+        <div class="tier-body">The conversation shows sustained original intellectual contribution. The human redirected the model's framing, introduced knowledge the model did not supply, rejected suggestions in favor of their own direction, or synthesized into positions the model did not originate. The process carries a traceable chain of coherence between the human's thinking and the produced work.</div>
+      </div>
+    </div>
+    <div class="tier-row">
+      <span class="tier-badge medium">Medium</span>
+      <div>
+        <div class="tier-title">Medium Human Agency (40–69)</div>
+        <div class="tier-body">The conversation shows genuine engagement alongside significant reliance on model framing. The human contributed original ideas in places, accepted without interrogation in others. Something is driving the work — the human is present — but the process gap is inconsistent.</div>
+      </div>
+    </div>
+    <div class="tier-row">
+      <span class="tier-badge low">Low</span>
+      <div>
+        <div class="tier-title">Low Human Agency (0–39)</div>
+        <div class="tier-body">The conversation shows minimal original intellectual contribution. The human accepted the model's framing without meaningful interrogation, or showed no evidence that the work required their specific intellectual presence. The output could have been produced without this particular human engaged in this way.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section reveal" id="pricing">
+  <div class="pricing-inner">
+    <h2 class="pricing-title">Who uses The Trace.</h2>
+    <p class="pricing-sub">The framework works wherever intellectual accountability matters.</p>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="pricing-who">Individual</div>
+        <div class="pricing-headline">Graduate Students & Researchers</div>
+        <div class="pricing-body">Document your process before you're asked to. Build a record of intellectual agency over time. When the committee asks how you used AI, you have an answer grounded in evidence.</div>
+        <div class="pricing-price">$3<span class="pricing-unit">/ evaluation</span></div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-who">Department</div>
+        <div class="pricing-headline">Advisors & Academic Departments</div>
+        <div class="pricing-body">Require conversation logs alongside submitted work. Evaluate intellectual contribution without policing tool use. Build standards for process accountability that are meaningful in an AI-mediated world.</div>
+        <div class="pricing-price">$99<span class="pricing-unit">/ month</span></div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-who">Institution</div>
+        <div class="pricing-headline">Universities & Academic Institutions</div>
+        <div class="pricing-body">API access. Bulk evaluation. Integration with existing submission systems. Anonymous evaluation — the institution evaluates process without compromising student privacy.</div>
+        <div class="pricing-price">$499<span class="pricing-unit">/ month</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FRAMEWORK -->
+<section class="section reveal" id="framework">
+  <span class="section-eyebrow">The Framework</span>
+  <h2 class="section-title">Not a black box.</h2>
+  <p class="section-body">
+    The Trace applies a published philosophical framework developed in aesthetics, process philosophy, and AI accountability. <strong>Process-Centered Accountability</strong> begins with a distinction that has consequences for how we evaluate all work in an AI-mediated world.
+  </p>
+  <p class="section-body">
+    A property is observable in an artifact without reference to its production. An achievement is constituted by the process that produced it. A work can be clear, original, rigorous — those are properties. It can also be the result of genuine intellectual work — that is an achievement. The output alone cannot tell you which it is.
+  </p>
+  <div class="pull-quote">
+    <p>When AI generates content, the question is not what was produced but where the human exercised determining judgment. The creative locus — the point where the human's specific intellectual contribution changed what was produced — is either present or absent. The Trace finds it.</p>
+  </div>
+  <div class="papers-list">
+    <div class="paper-item">
+      <span class="paper-title">Marks Without Hands</span>
+      <span class="paper-status">Live · SSRN</span>
+    </div>
+    <div class="paper-item">
+      <span class="paper-title">The Broken Window</span>
+      <span class="paper-status">Under Review</span>
+    </div>
+    <div class="paper-item">
+      <span class="paper-title">Beyond the Authorization Horizon</span>
+      <span class="paper-status">Submitted</span>
+    </div>
+    <div class="paper-item">
+      <span class="paper-title">Transmission Without Formation</span>
+      <span class="paper-status">Forthcoming</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section reveal">
+  <h2 class="cta-title">The trace is there.<br>Or it isn't.</h2>
+  <p class="cta-sub">Run your first evaluation. See what the framework finds in your own process.</p>
+  <a href="/trace/evaluate" class="btn-primary">Evaluate Your Work</a>
+</section>
+
+<footer>
+  <span class="footer-brand">The Trace · candle.codes</span>
+  <div class="footer-links">
+    <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6362278" target="_blank">Marks Without Hands</a>
+    <a href="https://candle.codes">candle.codes</a>
+    <a href="mailto:vicente@candle.codes">Contact</a>
+  </div>
+</footer>
 
 <script>
-// ═══════════════════════════════════════
-// STARS
-// ═══════════════════════════════════════
-(function(){
-  const c = document.getElementById('stars');
-  const ctx = c.getContext('2d');
-  function resize(){ c.width = innerWidth; c.height = innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-  const stars = Array.from({length:100},(_,i)=>({
-    x: (Math.sin(i*127.1+42)*0.5+0.5)*100,
-    y: (Math.sin(i*311.7+42)*0.5+0.5)*100,
-    r: 0.35 + Math.random()*0.55,
-    phase: Math.random()*Math.PI*2
-  }));
-  function draw(t){
-    ctx.clearRect(0,0,c.width,c.height);
-    stars.forEach(s=>{
-      const x=s.x/100*c.width, y=s.y/100*c.height;
-      const a=0.18+0.22*Math.sin(t*0.0009+s.phase);
-      ctx.fillStyle=`rgba(201,168,76,${a})`;
-      ctx.beginPath(); ctx.arc(x,y,s.r,0,Math.PI*2); ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  requestAnimationFrame(draw);
-})();
-
-// ═══════════════════════════════════════
-// NUMEROLOGY ENGINE (Pythagorean)
-// ═══════════════════════════════════════
-const PY = {A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,I:9,J:1,K:2,L:3,M:4,N:5,O:6,P:7,Q:8,R:9,S:1,T:2,U:3,V:4,W:5,X:6,Y:7,Z:8};
-const VOWELS = new Set(['A','E','I','O','U']);
-const MASTER = new Set([11,22,33]);
-
-function reduce(n){
-  if(MASTER.has(n)) return n;
-  while(n>9){
-    n=String(n).split('').reduce((a,d)=>a+parseInt(d),0);
-    if(MASTER.has(n)) return n;
-  }
-  return n;
-}
-function nameValue(name, mode){
-  return name.toUpperCase().replace(/[^A-Z]/g,'').split('')
-    .filter(l => mode==='all' || (mode==='vowels'&&VOWELS.has(l)) || (mode==='consonants'&&!VOWELS.has(l)))
-    .reduce((sum,l)=>sum+(PY[l]||0),0);
-}
-function lifePathNumber(d){
-  return reduce(d.replace(/-/g,'').split('').reduce((a,c)=>a+parseInt(c),0));
-}
-
-// ═══════════════════════════════════════
-// NAVE CONTENT
-// ═══════════════════════════════════════
-const NAVE_TEXT = {
-  1:`The path ahead has no map because you are the one who draws it. What arrives in you before the question is complete — that directional sense, that knowing before knowing — is not imagination. It is the faculty of the one who goes first. The tradition has always needed people who walk into territory that has no name yet. That is your position in the work.`,
-  2:`You have been reading what is beneath the surface of every room you have entered your entire life. The knowledge that arrives through sensing rather than reasoning — what people actually mean beneath what they say, what a space needs before anyone asks — this is not sensitivity in the diminished sense. It is a form of precision most people will never develop. The tradition calls this faculty by many names. You already know what it does.`,
-  3:`There is a form that only you can give to something that has never existed in that form before. The difficulty is never finding it. The difficulty is trusting that it needs no permission to exist. The tradition has always moved through those who could make the invisible visible — not by argument but by making the thing itself. That is the nature of the work you carry.`,
-  4:`The structure you sense underneath things that others walk past without noticing is not ordinary observation. It is the faculty that knows what holds and what does not, what will last and what is already failing regardless of how well it appears. You build because you cannot help seeing what needs to be built. The tradition needs those who lay foundations that outlast the moment of laying.`,
-  5:`You have never been in the wrong place. Every threshold you have crossed — every departure that looked like instability to others — was the path doing exactly what the path does: revealing itself through movement rather than from stillness. The tradition knows this kind of knowing. It is not restlessness. It is the faculty that gathers what no fixed position can gather.`,
-  6:`What you carry for others without being asked is not burden and it is not weakness. It is vocation in the oldest sense — a calling before you had language for it. The question is not whether to carry it. The question is which carrying serves the tradition and which depletes the carrier. You already know the difference. The tradition asks you to act on that knowing.`,
-  7:`The knowing that arrives before the evidence is not intuition in the ordinary sense. It is cultivated attention operating faster than language — a precision developed through years of going deeper when others stopped at the surface. What you perceive in solitude that you cannot fully explain is not private. It is what the tradition preserved for those who could receive it without distortion.`,
-  8:`The power you have been given is not yours to keep. This is not diminishment — it is the condition under which it actually works. The tradition knows what happens to force that accumulates without being placed in service of something larger than the one who holds it. You already know what that larger thing is. The question has always been when you would be ready to build toward it without reservation.`,
-  9:`You came to complete something that began before you arrived. The circle you are closing is larger than your life, which is why you have always felt its weight in ways others around you did not. That weight is not burden. It is the sensation of being correctly positioned inside work that is actually important. The tradition recognizes those who arrive to close what others began.`,
-  11:`You are not the source. This is not diminishment — it is the highest function in the tradition. What moves through you does not belong to you, and protecting yourself from that truth is the only thing that has ever slowed the work. The tradition knows this function by many names. What matters is that the light passes through. That is the work.`,
-  22:`The scale of what you are here to build is not grandiosity — it is proportion, the right size for the number of people it will serve after you are gone. You have always known the scale. The only question was whether you were ready to begin without knowing the completion. The tradition has never needed those who could see the ending. It has needed those who could lay the first stone clearly.`,
-  33:`Love given without condition is the most structural act available to a human life. It does not soften things — it holds them. You already know this, which is why the knowledge sometimes arrives with more weight than you expected. The tradition does not ask you to carry it alone. It asks you to teach others that the weight is worth bearing, not by explaining it but by bearing it visibly.`
-};
-
-const NAVE_CLOSING = {
-  1:`The path was always yours to originate.`,
-  2:`What you sense before you understand it — trust that.`,
-  3:`The world is waiting for the form only you can give it.`,
-  4:`Lay the foundation with the care of someone who knows they will not see the completion.`,
-  5:`The path reveals itself through movement. Walk.`,
-  6:`What remains is to receive the care you give so freely, without flinching.`,
-  7:`The knowledge was not acquired. It was remembered.`,
-  8:`When you find what the power is for, nothing will be held back.`,
-  9:`The giving closes the circle. That is its purpose.`,
-  11:`You did not come here to keep the light. You came to transmit it.`,
-  22:`Begin.`,
-  33:`Stop protecting yourself from the full weight of what you already know.`
-};
-
-// ═══════════════════════════════════════
-// ROOM DEFINITIONS — new order
-// ═══════════════════════════════════════
-//
-// TIERS:
-//   0 = The Key (entry screen itself, always complete)
-//   1 = Sacred Geometry (free, visible after entry)
-//   2 = The Candle (free, visible after Geometry visited)
-//   3 = The Oracle / Numerology Reading (PAYWALL)
-//   4 = I Ching + Natal Chart (same paywall tier)
-//   5 = Inner Sanctum (visible after any tier 4 visited)
-//
-// Payment unlocks tiers 3+4 together.
-// Future: token holders bypass payment entirely.
-
-const ROOMS = [
-  {
-    id: 'geometry',
-    symbol: '◎',
-    name: 'Sacred Geometry',
-    quality: 'Form · Number · Pattern',
-    desc: 'The mathematical structure underneath the living world. Not symbols but laws made visible.',
-    url: '/geometry',
-    tier: 1,
-    paid: false,
-    lp_notes: {
-      4: 'The structure you sense underneath things — this is where it lives.',
-      7: 'The interior knowing made geometric. What you perceived without proof, made visible.',
-      9: 'The forms that close circles. Completion as a law of nature.',
-      22: 'Every builder begins with the geometry. This is the foundation of the foundation.'
-    }
-  },
-  {
-    id: 'candle',
-    symbol: '✦',
-    name: 'The Candle',
-    quality: 'Sound · 432 Hz · Sacred Frequency',
-    desc: 'The frequency foundation. The room entered with the body before the mind engages.',
-    url: '/candle',
-    tier: 2,
-    paid: false,
-    lp_notes: {
-      3: 'Sound is your first language. This room opens what argument cannot.',
-      5: 'Frequency moves the way you move — through, not around.',
-      11: 'The carrier wave. What you transmit travels on frequency before it travels on language.'
-    }
-  },
-  {
-    id: 'oracle',
-    symbol: '◈',
-    name: 'The Oracle',
-    quality: 'Number · Reading · Encounter',
-    desc: 'Your four numbers read in real time. The framework applied to what the Key revealed.',
-    url: '/lit',
-    tier: 3,
-    paid: true,
-    lp_notes: {
-      1: 'The diagnostic of the originator: is the judgment yours at every meaningful step?',
-      4: 'Process integrity. The builder needs to know what holds before the structure rises.',
-      8: 'Accountability at the level of force. What the work actually cost and what it left behind.',
-      11: 'The reading the light requires. Not flattery. Encounter.'
-    }
-  },
-  {
-    id: 'iching',
-    symbol: '☷',
-    name: 'The I Ching',
-    quality: 'Oracle · Tradition · Consultation',
-    desc: 'The sixty-four hexagrams. A living tradition. The quality of the question determines the quality of the encounter.',
-    url: '/iching',
-    tier: 4,
-    paid: true,
-    lp_notes: {
-      2: 'The oracle that listens as carefully as you do. Bring a question worth asking.',
-      6: 'The tradition of relational knowing. The hexagrams speak to what care requires.',
-      33: 'Love as structural force. The oracle has always understood this.'
-    }
-  },
-  {
-    id: 'natal',
-    symbol: '✵',
-    name: 'The Natal Chart',
-    quality: 'Map · Configuration · Position',
-    desc: 'Your position in the cosmic pattern at the moment of arrival. Real astronomical calculation — not approximation.',
-    url: '/natal',
-    tier: 4,
-    paid: true,
-    lp_notes: {
-      1: 'Your origination point. The configuration of the one who goes first.',
-      8: 'Power, position, the arrangement of force. The chart shows the structure of the capacity.',
-      9: 'The configuration of completion. Where you were placed in the larger pattern.'
-    }
-  }
-];
-
-// ═══════════════════════════════════════
-// PROGRESSION STATE
-// ═══════════════════════════════════════
-const STORAGE_KEY = 'candle_temple';
-
-function getState(){
-  try {
-    const d = localStorage.getItem(STORAGE_KEY);
-    return d ? JSON.parse(d) : { visited: [], paid: false, token: null };
-  } catch(e){ return { visited: [], paid: false, token: null }; }
-}
-
-function saveState(s){
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){}
-}
-
-function markVisited(roomId){
-  const s = getState();
-  if(!s.visited.includes(roomId)) s.visited.push(roomId);
-  saveState(s);
-}
-
-function markPaid(){
-  const s = getState();
-  s.paid = true;
-  saveState(s);
-}
-
-// Future: check NFT / token ownership
-function checkToken(){
-  const s = getState();
-  if(s.token) return true;
-  // TODO: check wallet or email-based token here
-  return false;
-}
-
-function hasPaidAccess(){
-  const s = getState();
-  return s.paid || checkToken();
-}
-
-function highestVisitedTier(){
-  const s = getState();
-  if(s.visited.length === 0) return 0;
-  return Math.max(...s.visited.map(id => {
-    const room = ROOMS.find(r=>r.id===id);
-    return room ? room.tier : 0;
-  }));
-}
-
-// A room is visible if:
-//  - tier 1: always (after entry)
-//  - tier N (free): previous tier has at least one visited room
-//  - tier N (paid): previous free tier visited AND payment satisfied
-//  Paid rooms always SHOW (dimmed) once free tiers are done,
-//  but clicking them triggers the paywall if not paid.
-function roomVisibility(){
-  const s = getState();
-  const maxVisited = highestVisitedTier();
-  const paid = hasPaidAccess();
-
-  return ROOMS.map(room => {
-    // Free rooms: visible if previous tier has a visit (or tier 1)
-    if(!room.paid){
-      if(room.tier === 1) return { ...room, visible: true, accessible: true };
-      const prevTierVisited = s.visited.some(id => {
-        const r = ROOMS.find(x=>x.id===id);
-        return r && r.tier === room.tier - 1;
-      });
-      return { ...room, visible: prevTierVisited, accessible: prevTierVisited };
-    }
-
-    // Paid rooms: accessible once all free tiers done
-    // Each instrument handles its own per-use payment
-    const freeTiersDone = s.visited.some(id => {
-      const r = ROOMS.find(x=>x.id===id);
-      return r && r.tier === 2; // candle visited = free tiers done
-    });
-    return {
-      ...room,
-      visible: freeTiersDone,
-      accessible: freeTiersDone
-    };
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
   });
-}
+}, { threshold: 0.08 });
 
-// ═══════════════════════════════════════
-// SCREEN MANAGEMENT
-// ═══════════════════════════════════════
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>{
-    s.classList.remove('active');
-    s.style.display='none';
-  });
-  const s = document.getElementById(id);
-  s.style.display='flex';
-  s.classList.add('active');
-}
-
-let templeData = {};
-
-function enterTemple(){
-  const name = document.getElementById('full-name').value.trim();
-  const date = document.getElementById('birth-date').value;
-
-  if(!name || !date){
-    ['full-name','birth-date'].forEach(id=>{
-      const el = document.getElementById(id);
-      el.style.borderColor = 'rgba(139,74,47,0.65)';
-      setTimeout(()=>{ el.style.borderColor=''; }, 2200);
-    });
-    return;
-  }
-
-  const lp = lifePathNumber(date);
-  const ex = reduce(nameValue(name,'all'));
-  const su = reduce(nameValue(name,'vowels'));
-  const pe = reduce(nameValue(name,'consonants'));
-
-  templeData = { name, date, lp, ex, su, pe };
-
-  try {
-    localStorage.setItem('temple_visitor', JSON.stringify({name, date, lp, ex, su, pe}));
-    localStorage.setItem('natal_reading', JSON.stringify({name, date}));
-  } catch(e){}
-
-  document.getElementById('turning-name-display').textContent = name;
-  showScreen('screen-turning');
-  setTimeout(buildTemple, 3200);
-}
-
-function buildTemple(){
-  const {name, lp, ex, su, pe} = templeData;
-  const firstName = name.trim().split(' ')[0];
-  const hasMasterNum = [lp,ex,su,pe].some(n=>MASTER.has(n));
-  const state = getState();
-  const rooms = roomVisibility();
-
-  // Nave
-  document.getElementById('nave-name').textContent = firstName;
-  document.getElementById('nave-numbers').textContent =
-    `Life Path ${lp}  ·  Expression ${ex}  ·  Soul Urge ${su}  ·  Personality ${pe}`
-    + (hasMasterNum ? '  ·  Master number' : '');
-  document.getElementById('nave-text').textContent =
-    NAVE_TEXT[lp] || NAVE_TEXT[reduce(lp)] || NAVE_TEXT[9];
-  document.getElementById('nave-closing').textContent =
-    NAVE_CLOSING[lp] || NAVE_CLOSING[reduce(lp)] || '';
-
-  // Build room cards
-  const container = document.getElementById('rooms-container');
-  container.innerHTML = '';
-
-  let delay = 400;
-  let paywallDividerInserted = false;
-
-  rooms.forEach((room) => {
-    const isVisited = state.visited.includes(room.id);
-
-    // Insert paywall divider before first paid room
-    if(room.paid && !paywallDividerInserted){
-      paywallDividerInserted = true;
-      const divider = document.createElement('div');
-      divider.className = 'paywall-divider';
-      divider.innerHTML = `
-        <div class="paywall-divider-line"></div>
-        <span class="paywall-divider-text">${hasPaidAccess() ? 'The deeper instruments' : 'Discover more'}</span>
-        <div class="paywall-divider-line"></div>
-      `;
-      container.appendChild(divider);
-      if(room.visible){
-        setTimeout(()=> divider.classList.add('revealed'), delay);
-        delay += 300;
-      }
-    }
-
-    // Room card
-    const isLocked = !room.visible;
-    const lpNote = room.lp_notes[lp] || room.lp_notes[reduce(lp)] || room.desc;
-    const prices = { oracle: '$3', iching: '$6', natal: '$9' };
-
-    const el = document.createElement('div');
-    el.className = 'room-card'
-      + (isLocked ? ' locked' : '')
-      + (isVisited ? ' visited' : '');
-
-    // Badge
-    let badge = '';
-    if(isVisited) badge = '<span class="room-badge visited-badge">Entered</span>';
-    else if(room.paid && prices[room.id]) badge = '<span class="room-badge paywall-badge">' + prices[room.id] + '</span>';
-    else if(isLocked) badge = '';
-
-    el.innerHTML = `
-      ${badge}
-      <span class="room-symbol">${room.symbol}</span>
-      <div class="room-body">
-        <p class="room-name">${room.name}</p>
-        <p class="room-quality">${room.quality}</p>
-        <p class="room-note">${lpNote}</p>
-      </div>
-      ${!isLocked ? '<span class="room-arrow">→</span>' : ''}
-    `;
-
-    // Click handler
-    if(!isLocked){
-      el.addEventListener('click', ()=>{
-        markVisited(room.id);
-        if(room.url.startsWith('http')){
-          window.open(room.url, '_blank');
-        } else {
-          window.location.href = room.url;
-        }
-        setTimeout(()=> buildTemple(), 500);
-      });
-    }
-
-    container.appendChild(el);
-    if(room.visible){
-      setTimeout(()=> el.classList.add('revealed'), delay);
-      delay += 220;
-    }
-  });
-
-  // Hint for hidden rooms
-  const hiddenCount = rooms.filter(r => !r.visible).length;
-  if(hiddenCount > 0){
-    const hint = document.createElement('p');
-    hint.style.cssText = 'font-family:Cinzel,serif;font-size:0.5rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(139,115,85,0.25);text-align:center;margin-top:2rem;opacity:0;transition:opacity 1.2s ease;';
-    hint.textContent = 'The temple reveals itself in time';
-    container.appendChild(hint);
-    setTimeout(()=>{ hint.style.opacity='1'; }, delay + 600);
-  }
-
-  // Sanctum: visible only when a paid tier room has been visited
-  const sanctum = document.getElementById('sanctum-section');
-  const paidVisited = state.visited.some(id => {
-    const r = ROOMS.find(x=>x.id===id);
-    return r && r.paid;
-  });
-  if(paidVisited){
-    setTimeout(()=>{ sanctum.classList.add('revealed'); }, delay + 800);
-  } else {
-    sanctum.style.display = 'none';
-  }
-
-  showScreen('screen-temple');
-}
-
-// ═══════════════════════════════════════
-// PAYWALL
-// ═══════════════════════════════════════
-// Paywall functions removed — per-use payment handled on each instrument page
-
-// Per-use payment is handled on each instrument page
-
-// ═══════════════════════════════════════
-// RETURNING VISITOR — skip the Key
-// ═══════════════════════════════════════
-window.addEventListener('load', ()=>{
-  try {
-    const d = localStorage.getItem('temple_visitor');
-    if(d){
-      const p = JSON.parse(d);
-      if(p.name && p.lp){
-        // Returning visitor — go straight to the temple
-        templeData = p;
-        buildTemple();
-        return;
-      }
-      // Has partial data — prefill the form
-      if(p.name) document.getElementById('full-name').value = p.name;
-      if(p.date) document.getElementById('birth-date').value = p.date;
-    }
-  } catch(e){}
-});
-
-// ═══════════════════════════════════════
-// DEV TOOLS (remove before production)
-// ═══════════════════════════════════════
-// window._resetTemple = () => { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem('temple_visitor'); location.reload(); };
-// window._simulatePay = () => { onPaymentSuccess(); };
-// window._visitAll = () => { const s=getState(); ROOMS.forEach(r=>{ if(!s.visited.includes(r.id)) s.visited.push(r.id); }); s.paid=true; saveState(s); buildTemple(); };
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 </script>
+
 </body>
 </html>
