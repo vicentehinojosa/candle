@@ -59,6 +59,20 @@ function cors(res){
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
+async function safeGet(key, fallback){
+  try{
+    const val = await kv.get(key);
+    return val == null ? fallback : val;
+  }catch(e){
+    console.error('KV unavailable, continuing without it for this turn:', e.message);
+    return fallback;
+  }
+}
+async function safeSet(key, value, opts){
+  try{ await kv.set(key, value, opts); }
+  catch(e){ console.error('KV unavailable, could not persist:', e.message); }
+}
+
 export default async function handler(req, res){
   cors(res);
   if(req.method === 'OPTIONS') return res.status(204).end();
@@ -73,7 +87,7 @@ export default async function handler(req, res){
   const memKey   = `sara:mem:${clientId}`;
 
   // --- caps -------------------------------------------------
-  let meter = (await kv.get(meterKey)) || { spent: 0, count: 0 };
+  let meter = await safeGet(meterKey, { spent: 0, count: 0 });
   if(meter.spent >= CAP_USD || meter.count >= CAP_MESSAGES){
     return res.status(200).json({
       text: "We've covered a lot today — I'm going to pause here so this stays free for everyone. Come back anytime; I'll remember where we left off.",
@@ -82,7 +96,7 @@ export default async function handler(req, res){
   }
 
   // --- memory: prior transcript for this device -------------
-  let memory = (await kv.get(memKey)) || [];   // [{role, content}, ...]
+  let memory = await safeGet(memKey, []);   // [{role, content}, ...]
   if(memory.length === 0){
     // seed with the greeting she opened with, so continuity holds
     memory = [{ role: 'assistant', content: GREETING }];
@@ -126,14 +140,14 @@ export default async function handler(req, res){
     (usage.input_tokens  / 1e6) * PRICE_INPUT_PER_MILLION +
     (usage.output_tokens / 1e6) * PRICE_OUTPUT_PER_MILLION;
   meter = { spent: meter.spent + cost, count: meter.count + 1 };
-  await kv.set(meterKey, meter, { ex: WINDOW_SECONDS });
+  await safeSet(meterKey, meter, { ex: WINDOW_SECONDS });
 
   // --- persist the transcript (this is the cross-visit memory)
   memory.push({ role: 'user', content: message });
   memory.push({ role: 'assistant', content: reply });
   // keep storage bounded
   if(memory.length > 200) memory = memory.slice(-200);
-  await kv.set(memKey, memory, { ex: MEMORY_TTL });
+  await safeSet(memKey, memory, { ex: MEMORY_TTL });
 
   return res.status(200).json({ text: reply });
 }
