@@ -1,10 +1,15 @@
-import { kv } from '@vercel/kv';
-
 /* ============================================================
    Sara — serverless chat proxy for sara.candle.codes
    Mirrors the VELA proxy: key stays server-side, hard caps,
    Sonnet 5 pricing. Adds CORS (called from your website) and
    per-clientId transcript storage so Sara remembers across visits.
+
+   Storage: plain fetch to Upstash's REST API, no npm package,
+   same approach as every other function in this repo (oracle.js
+   etc. talk to Anthropic the same way, no import needed).
+   Needs two env vars: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN.
+   If they're not set yet, Sara still answers, she just won't
+   remember across visits or enforce the cap until they're added.
    ============================================================ */
 
 const MODEL = 'claude-sonnet-5';
@@ -59,18 +64,36 @@ function cors(res){
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
+const REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+async function redisCommand(command){
+  if(!REDIS_URL || !REDIS_TOKEN) throw new Error('Redis env vars not set');
+  const r = await fetch(REDIS_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${REDIS_TOKEN}` },
+    body: JSON.stringify(command)
+  });
+  const data = await r.json();
+  if(data.error) throw new Error(data.error);
+  return data.result;
+}
+
 async function safeGet(key, fallback){
   try{
-    const val = await kv.get(key);
-    return val == null ? fallback : val;
+    const raw = await redisCommand(['GET', key]);
+    return raw == null ? fallback : JSON.parse(raw);
   }catch(e){
-    console.error('KV unavailable, continuing without it for this turn:', e.message);
+    console.error('Redis unavailable, continuing without it for this turn:', e.message);
     return fallback;
   }
 }
-async function safeSet(key, value, opts){
-  try{ await kv.set(key, value, opts); }
-  catch(e){ console.error('KV unavailable, could not persist:', e.message); }
+async function safeSet(key, value, ttlSeconds){
+  try{
+    await redisCommand(['SET', key, JSON.stringify(value), 'EX', String(ttlSeconds)]);
+  }catch(e){
+    console.error('Redis unavailable, could not persist:', e.message);
+  }
 }
 
 export default async function handler(req, res){
@@ -140,14 +163,14 @@ export default async function handler(req, res){
     (usage.input_tokens  / 1e6) * PRICE_INPUT_PER_MILLION +
     (usage.output_tokens / 1e6) * PRICE_OUTPUT_PER_MILLION;
   meter = { spent: meter.spent + cost, count: meter.count + 1 };
-  await safeSet(meterKey, meter, { ex: WINDOW_SECONDS });
+  await safeSet(meterKey, meter, WINDOW_SECONDS);
 
   // --- persist the transcript (this is the cross-visit memory)
   memory.push({ role: 'user', content: message });
   memory.push({ role: 'assistant', content: reply });
   // keep storage bounded
   if(memory.length > 200) memory = memory.slice(-200);
-  await safeSet(memKey, memory, { ex: MEMORY_TTL });
+  await safeSet(memKey, memory, MEMORY_TTL);
 
   return res.status(200).json({ text: reply });
 }
