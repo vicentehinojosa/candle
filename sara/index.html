@@ -66,30 +66,17 @@
 
 <script>
 /* ============================================================
-   CONFIG — the one line to point at your backend
+   CONFIG, the one line to point at your backend
    ============================================================ */
 const API_URL = "https://sara.candle.codes/api/sara-chat";
 
-/* Static greeting shown instantly on open (no API cost).
-   Keep identical to GREETING in api/chat.js. */
+/* Her opening line. Not sent to the backend on load, just shown,
+   then seeded as message one in the in-memory history below. */
 const GREETING =
- "Hey. I'm Sara. Yes, I'm on fire, it's fine, I run cooler than I look. What's going on with you.";
-/* ============================================================
-   CLIENT ID — device-level, enables cross-visit memory
-   ============================================================ */
-function clientId(){
-  let id=null;
-  try{ id=localStorage.getItem("sara_client_id"); }catch(e){}
-  if(!id){
-    id=(crypto&&crypto.randomUUID)?crypto.randomUUID():"c_"+Math.random().toString(36).slice(2)+Date.now().toString(36);
-    try{ localStorage.setItem("sara_client_id",id); }catch(e){}
-  }
-  return id;
-}
-const CLIENT=clientId();
+  "Hey, I'm Sara. Someone probably sent you here to see what VELA's actually built. Talking to me is that, ask about the company, or just talk, either shows you the same thing. This chat isn't saved anywhere, so ask freely.";
 
 /* ============================================================
-   FLAME — Sara as a slow candle of 0s and 1s
+   FLAME, Sara as a slow candle of 0s and 1s
    ============================================================ */
 const canvas=document.getElementById("flame");
 const ctx=canvas.getContext("2d");
@@ -110,7 +97,7 @@ function color(h){
   if(h>0.90)return"#fffdf5"; if(h>0.75)return"#fff2c2"; if(h>0.58)return"#ffd27a";
   if(h>0.42)return"#ffb347"; if(h>0.28)return"#ff8c3a"; if(h>0.16)return"#e85d1a"; return"#a8360a";
 }
-const STEP=9;                 // sparser than before → less busy
+const STEP=9;                 // sparser than before, less busy
 let t=0, speak=0;             // speak envelope, rises when a reply lands
 function flame(){
   t+= reduce?0.010:0.020;     // slow, intimate
@@ -132,8 +119,8 @@ function flame(){
       heat*=(0.84+0.16*noise(fy*1.7+dxi,t));
       heat*=(1+0.20*sp);
       heat=clamp(heat,0,1);
-      if(heat<0.16) continue;                 // higher cutoff → thinner, calmer
-      if(Math.random()<0.72){                  // sparse draw → less busy
+      if(heat<0.16) continue;                 // higher cutoff, thinner, calmer
+      if(Math.random()<0.72){                  // sparse draw, less busy
         ctx.globalAlpha=clamp(0.30+heat*0.6,0,1);
         ctx.fillStyle=color(heat);
         ctx.fillText(Math.random()<0.5?"0":"1", px, py);
@@ -155,6 +142,12 @@ const input=document.getElementById("input");
 const send=document.getElementById("send");
 let busy=false;
 
+/* Conversation lives here, and only here. Nothing written to
+   disk, localStorage, or a server. Closing the tab ends it. */
+let history=[];
+const MAX_MESSAGES=40;
+let sentCount=0;
+
 function bubble(role,text){
   const row=document.createElement("div");
   row.className="row "+(role==="user"?"you":"sara");
@@ -174,20 +167,27 @@ function typing(){
 async function sendMessage(){
   const text=input.value.trim();
   if(!text||busy) return;
+  if(sentCount>=MAX_MESSAGES){
+    bubble("sara","We've covered a lot, and nothing here gets logged by design, so let's leave it here for now. Reach out any time, vince.hinojosa@gmail.com.");
+    return;
+  }
   busy=true; send.disabled=true;
   input.value=""; input.style.height="42px";
   bubble("user",text);
+  history.push({role:"user",content:text});
+  sentCount++;
   const ind=typing();
   try{
     const res=await fetch(API_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({clientId:CLIENT,message:text})
+      body:JSON.stringify({messages:history})
     });
     const data=await res.json();
     ind.remove();
     const reply=(data&&data.text)?data.text:"…something glitched on my end. Try that again?";
     bubble("sara",reply);
+    history.push({role:"assistant",content:reply});
     speak=1;                                   // the flame flares as she answers
   }catch(err){
     ind.remove();
@@ -198,7 +198,15 @@ async function sendMessage(){
 }
 send.addEventListener("click",sendMessage);
 input.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();} });
-input.addEventListener("input",()=>{ input.style.height="42px"; input.style.height=Math.min(input.scrollHeight,120)+"px"; });
+input.addEventListener("input",()=>{
+  if(input.value.endsWith("\n")){
+    input.value = input.value.slice(0, -1);
+    sendMessage();
+    return;
+  }
+  input.style.height="42px";
+  input.style.height=Math.min(input.scrollHeight,120)+"px";
+});
 
 /* ============================================================
    BOOT
@@ -206,6 +214,7 @@ input.addEventListener("input",()=>{ input.style.height="42px"; input.style.heig
 function boot(){
   size();
   requestAnimationFrame(flame);
+  history.push({role:"assistant",content:GREETING});
   bubble("sara",GREETING);
   speak=1;                                     // gentle flare on her opening line
 }
