@@ -19,10 +19,12 @@
   #flame{position:absolute;inset:0;width:100%;height:100%;}
   #scrim{position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(180deg,rgba(5,3,2,0.55) 0%,rgba(5,3,2,0.15) 30%,rgba(5,3,2,0.10) 60%,rgba(5,3,2,0.72) 100%);}
-  /* chat sits over the flame, positioned explicitly rather than via flex,
-     so the scrollable area's size is arithmetic, not flex negotiation */
+  /* chat sits over the flame. log fills the entire frame exactly,
+     inset:0 has zero ambiguity. the composer floats on top of it
+     as a separate layer, and log's own bottom padding keeps real
+     content clear of it, nothing here depends on a calculated size */
   #chat{position:absolute;inset:0;}
-  #log{position:absolute;top:0;left:0;right:0;bottom:var(--cbh,64px);overflow-y:auto;padding:22px 12px 6px;
+  #log{position:absolute;inset:0;overflow-y:auto;padding:22px 12px var(--cbh,74px) 12px;
     display:flex;flex-direction:column;gap:10px;justify-content:flex-end;scrollbar-width:thin;}
   #log::-webkit-scrollbar{width:6px;}
   #log::-webkit-scrollbar-thumb{background:rgba(255,180,90,0.18);border-radius:3px;}
@@ -39,7 +41,7 @@
   .dots span{display:inline-block;width:5px;height:5px;margin:0 2px;border-radius:50%;background:var(--amber);opacity:.4;animation:blip 1.3s infinite;}
   .dots span:nth-child(2){animation-delay:.2s;} .dots span:nth-child(3){animation-delay:.4s;}
   @keyframes blip{0%,60%,100%{opacity:.25;transform:translateY(0);}30%{opacity:.9;transform:translateY(-3px);}}
-  #composer{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px 12px;
+  #composer{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;gap:8px;padding:10px 12px;
     padding-bottom:calc(14px + env(safe-area-inset-bottom));background:var(--bg);}
   #input{flex:1;resize:none;height:42px;max-height:120px;padding:10px 12px;
     background:rgba(10,6,3,0.7);border:1px solid var(--line);border-radius:10px;color:#ffeede;
