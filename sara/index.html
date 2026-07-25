@@ -24,8 +24,14 @@
      as a separate layer, and log's own bottom padding keeps real
      content clear of it, nothing here depends on a calculated size */
   #chat{position:absolute;inset:0;}
-  #log{position:absolute;inset:0;overflow-y:auto;padding:22px 12px var(--cbh,74px) 12px;
-    display:flex;flex-direction:column;gap:10px;justify-content:flex-end;scrollbar-width:thin;}
+  /* NOTE: no justify-content:flex-end here. on a scrollable flex column that
+     pushes overflow past the TOP edge, where scrollTop can't reach it, and the
+     browser doesn't even report it as overflow. margin-top:auto on the first
+     row gives the same bottom-aligned look with the overflow going the right way */
+  #log{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:22px 12px var(--cbh,74px) 12px;
+    display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;}
+  #log > .row:first-child{margin-top:auto;}
   #log::-webkit-scrollbar{width:9px;}
   #log::-webkit-scrollbar-thumb{background:rgba(255,180,90,0.45);border-radius:5px;}
   #log::-webkit-scrollbar-thumb:hover{background:rgba(255,180,90,0.7);}
@@ -40,6 +46,17 @@
   .sara .bubble{background:rgba(8,5,3,0.68);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
     border:1px solid var(--line);color:#f6e6cf;}
   .you .bubble{background:rgba(40,20,6,0.72);border:1px solid rgba(255,180,90,0.12);color:#ffeede;}
+  /* live card, ported from the site build. lets her reflect back what she
+     actually heard, written the way the Matching Agent writes its reasoning */
+  .live-card{max-width:92%;margin:2px 0;padding:12px 14px;border-left:2px solid var(--amber);
+    border-radius:4px;background:linear-gradient(90deg,rgba(255,180,90,0.13),rgba(255,180,90,0.02) 75%);
+    animation:cardIn .6s ease;}
+  .live-card-label{font-family:"Courier New",monospace;font-size:10px;letter-spacing:0.16em;
+    text-transform:uppercase;color:var(--amber);opacity:.85;margin-bottom:6px;}
+  .live-card-body{font-size:14px;line-height:1.55;font-style:italic;color:#fff6e8;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  @keyframes cardIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  @media (prefers-reduced-motion:reduce){.live-card{animation:none;}}
   .dots span{display:inline-block;width:5px;height:5px;margin:0 2px;border-radius:50%;background:var(--amber);opacity:.4;animation:blip 1.3s infinite;}
   .dots span:nth-child(2){animation-delay:.2s;} .dots span:nth-child(3){animation-delay:.4s;}
   @keyframes blip{0%,60%,100%{opacity:.25;transform:translateY(0);}30%{opacity:.9;transform:translateY(-3px);}}
@@ -176,6 +193,25 @@ function typing(){
   log.appendChild(row); log.scrollTop=log.scrollHeight; return row;
 }
 
+/* Live card: she wraps a reflection in [[livecard]]...[[/livecard]] and it
+   renders as the Matching Agent's reasoning would look, not a chat bubble. */
+const LIVECARD_RE=/\[\[livecard\]\]([\s\S]*?)\[\[\/livecard\]\]/i;
+function extractLiveCard(raw){
+  const m=raw.match(LIVECARD_RE);
+  if(!m) return {text:raw,card:null};
+  const card=m[1].trim();
+  const text=(raw.slice(0,m.index)+raw.slice(m.index+m[0].length)).trim();
+  return {text,card};
+}
+function liveCard(text){
+  const row=document.createElement("div"); row.className="row sara";
+  const card=document.createElement("div"); card.className="live-card";
+  const label=document.createElement("div"); label.className="live-card-label"; label.textContent="what i heard";
+  const body=document.createElement("div"); body.className="live-card-body"; body.textContent=text;
+  card.appendChild(label); card.appendChild(body); row.appendChild(card);
+  log.appendChild(row); log.scrollTop=log.scrollHeight;
+}
+
 async function sendMessage(){
   const text=input.value.trim();
   if(!text||busy) return;
@@ -197,9 +233,11 @@ async function sendMessage(){
     });
     const data=await res.json();
     ind.remove();
-    const reply=(data&&data.text)?data.text:"…something glitched on my end. Try that again?";
-    bubble("sara",reply);
-    history.push({role:"assistant",content:reply});
+    const raw=(data&&data.text)?data.text:"…something glitched on my end. Try that again?";
+    const {text:spoken,card}=extractLiveCard(raw);
+    if(spoken) bubble("sara",spoken);
+    if(card) liveCard(card);
+    history.push({role:"assistant",content:raw});
     speak=1;                                   // the flame flares as she answers
   }catch(err){
     ind.remove();
