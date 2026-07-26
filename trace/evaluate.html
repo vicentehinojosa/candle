@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Trace — Evaluate Your Process</title>
+<meta name="description" content="The Trace evaluates human intellectual agency in AI-assisted work using the Process-Centered Accountability framework. Not detection. A reading of your process.">
+<meta property="og:title" content="The Trace — A reading of your process">
+<meta property="og:description" content="Detection asks whether AI wrote it. The Trace asks whether you were intellectually present. Institute for Process-Centered Accountability.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://candle.codes/trace">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23F5F1EC'/%3E%3Ctext x='50' y='68' font-size='62' text-anchor='middle' fill='%237D4E3A' font-family='Georgia,serif'%3E%E2%97%88%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 <style>
@@ -33,6 +40,7 @@ body {
   font-size: 15px;
   line-height: 1.65;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -263,6 +271,67 @@ nav {
 }
 .btn-reset:hover { border-color: var(--ink); color: var(--ink); }
 
+/* ── PAYWALL ── */
+.paywall-card {
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+}
+
+.paywall-card--standalone {
+  display: flex; align-items: center;
+  justify-content: center;
+  min-height: 60vh; border-top: none;
+  padding-top: 0; margin-top: 0;
+}
+
+.paywall-inner {
+  text-align: center; max-width: 38ch;
+}
+
+.paywall-eyebrow {
+  font-size: 0.6rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--light);
+  margin-bottom: 1rem;
+}
+
+.paywall-title {
+  font-family: 'Lora', serif;
+  font-size: 1.8rem; font-weight: 500;
+  color: var(--ink); line-height: 1.2;
+  margin-bottom: 0.8rem;
+}
+
+.paywall-body {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 1rem; color: var(--mid);
+  margin-bottom: 1.8rem; line-height: 1.7;
+}
+
+.btn-subscribe {
+  display: block;
+  background: var(--accent); color: var(--bg);
+  border: none; padding: 0.85rem 2.2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  cursor: pointer; text-decoration: none;
+  border-radius: 1px; margin-bottom: 1.2rem;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-subscribe:hover {
+  background: var(--accent-hover); transform: translateY(-1px);
+}
+
+.paywall-note {
+  font-size: 0.75rem; color: var(--light);
+}
+
+.paywall-link {
+  color: var(--accent); text-decoration: none;
+}
+.paywall-link:hover { text-decoration: underline; }
+
 /* ── INPUT DOCK ── */
 .input-dock {
   flex-shrink: 0;
@@ -270,6 +339,12 @@ nav {
   padding: 1.4rem 2rem 1.8rem;
   background: var(--bg);
   position: relative; z-index: 5;
+  transition: opacity 0.3s ease, max-height 0.4s ease, padding 0.4s ease;
+  max-height: 9999px; overflow: hidden;
+}
+.input-dock.hidden {
+  opacity: 0; max-height: 0;
+  padding: 0; pointer-events: none;
 }
 
 .input-dock-inner {
@@ -334,13 +409,30 @@ textarea::placeholder { color: var(--light); font-style: italic; }
 }
 .btn-evaluate:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
-.input-dock {
-  transition: opacity 0.3s ease, max-height 0.4s ease, padding 0.4s ease;
-  max-height: 9999px; overflow: hidden;
+.notice {
+  max-width: 600px; margin: 0 auto 1.5rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  font-size: 0.78rem; color: var(--mid);
+  text-align: center; border-radius: 1px;
 }
-.input-dock.hidden {
-  opacity: 0; max-height: 0;
-  padding: 0; pointer-events: none;
+
+.error-space {
+  flex: 1; display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.9rem; padding: 2rem; text-align: center;
+}
+.error-space.active { display: flex; }
+
+.error-title {
+  font-family: 'Lora', serif; font-size: 1.4rem;
+  font-weight: 500; color: var(--ink);
+}
+
+.error-body {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 0.95rem; color: var(--mid); max-width: 40ch;
 }
 </style>
 </head>
@@ -362,12 +454,18 @@ textarea::placeholder { color: var(--light); font-style: italic; }
     <p class="brand-sub">A reading of your process.</p>
   </div>
 
-  <div class="loading-space" id="loading-space">
+  <div class="loading-space" id="loading-space" role="status" aria-live="polite">
     <div class="loading-mark">◈</div>
     <p class="loading-label">Reading</p>
   </div>
 
-  <div class="results-space" id="results-space">
+  <div class="error-space" id="error-space">
+    <p class="error-title" id="error-title">Something went wrong.</p>
+    <p class="error-body" id="error-body">Please try again.</p>
+    <button class="btn-reset" onclick="resetEval()">Back</button>
+  </div>
+
+  <div class="results-space" id="results-space" role="region" aria-live="polite" aria-label="Evaluation result">
     <div class="results-inner" id="results-inner"></div>
   </div>
 
@@ -390,154 +488,185 @@ textarea::placeholder { color: var(--light); font-style: italic; }
 </div>
 
 <script>
-const PCA_CORPUS = `Process-Centered Accountability (PCA) is a philosophical framework for evaluating intellectual contributions in AI-assisted work.
+/* The evaluation framework lives on the server at /api/trace. */
 
-PROPERTY vs ACHIEVEMENT: A property is observable in an artifact without reference to its production. An achievement is constituted by the process that produced it.
+function esc(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-CREATIVE LOCUS: The point in a human-AI collaboration where the human's specific intellectual contribution changed what was produced. Evidence: the human redirected the AI's framing, introduced domain knowledge the AI did not supply, rejected suggestions in favor of their own direction, synthesized across the exchange into positions the AI did not originate.
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : null;
+}
 
-INTENTIONALITY-OUTPUT DECOUPLING: When output quality no longer reliably indicates human intentionality.
+function setCookie(name, value, days) {
+  const exp = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = name + '=' + value + '; expires=' + exp + '; path=/; SameSite=Lax';
+}
 
-THE PROCESS GAP: The space between a human's intention and their intellectual engagement with the production process.
+/* Set FREE_LIMIT_ON to true when the subscription backend is ready. */
+const FREE_LIMIT_ON = false;
 
-HUMAN AGENCY INDICATORS (positive): Human redirects AI framing, introduces original concepts, rejects AI suggestions, synthesizes AI outputs into original positions, provides domain-specific correction, asks generative rather than receptive questions.
+function isSubscriber() { return !!getCookie('trace_session'); }
+function hasFreeUsed()  { return getCookie('trace_used') === 'true'; }
+function markFreeUsed() { setCookie('trace_used', 'true', 30); }
 
-LOW AGENCY INDICATORS: Human accepts AI framing without interrogation, submits AI-generated content with minimal revision, shows no evidence their specific intellectual presence changed the output.`;
+const ERRORS = {
+  rate_limit: ['You have reached the limit for now.', 'The Trace allows a limited number of evaluations per hour. Please try again later.'],
+  too_short:  ['That log is too short to read.', 'Paste a full conversation. The framework needs enough exchange to evaluate.'],
+  forbidden:  ['This request was blocked.', 'Please open The Trace directly at candle.codes/trace.'],
+  upstream:   ['The reading could not be completed.', 'The evaluator did not respond. Please try again in a moment.'],
+  unreadable: ['The reading came back malformed.', 'This occasionally happens with unusual logs. Please try again.'],
+  network:    ['Connection failed.', 'Check your connection and try again.'],
+  paywall:    ['Free evaluation used.', 'Continue with The Trace to keep reading your process.']
+};
 
-const EVAL_PROMPT = `You are an evaluator applying the Process-Centered Accountability (PCA) framework to assess human intellectual agency in a human-AI conversation log.
-
-You are NOT evaluating whether AI was used. You are evaluating the QUALITY and PRESENCE of human agency within the collaboration.
-
-FRAMEWORK:
-${PCA_CORPUS}
-
-You will return a structured JSON evaluation. Be precise, fair, and grounded only in what the log actually shows. Do not penalize AI use. Penalize absent human agency.
-
-Return valid JSON only:
-{
-  "score": <integer 0-100, where 100 = maximum human agency, 0 = no traceable human agency>,
-  "tier": <"high" | "medium" | "low">,
-  "tier_label": <"High Human Agency" | "Medium Human Agency" | "Low Human Agency">,
-  "rationale": <2-3 sentences. Plain language. What does this log show about the human's intellectual contribution? Be specific. Do not hedge excessively.>,
-  "trace_moments": [
-    { "label": <short label e.g. "Original Redirection" or "Uncritical Acceptance">, "text": <one sentence describing a specific moment in the log that evidences agency or its absence> },
-    { "label": "...", "text": "..." },
-    { "label": "...", "text": "..." }
-  ],
-  "framework_note": <one sentence: the single most relevant PCA concept at work in this evaluation>
-}`;
+function showError(code) {
+  const [title, body] = ERRORS[code] || ERRORS.upstream;
+  document.getElementById('error-title').textContent = title;
+  document.getElementById('error-body').textContent = body;
+  document.getElementById('loading-space').classList.remove('active');
+  document.getElementById('results-space').classList.remove('active');
+  document.getElementById('brand-space').classList.add('hidden');
+  document.querySelector('.input-dock').classList.add('hidden');
+  document.getElementById('error-space').classList.add('active');
+  document.getElementById('btn-evaluate').disabled = false;
+}
 
 async function runEvaluation() {
   const content = document.getElementById('paste-input').value.trim();
+
   if (!content || content.length < 100) {
     alert('Please paste a conversation to evaluate.');
     return;
   }
 
-  const subject = document.getElementById('ctx-subject').value.trim();
-  const type    = document.getElementById('ctx-type').value.trim();
-  const stage   = document.getElementById('ctx-stage').value.trim();
-  const context = [
-    subject && `Discipline: ${subject}`,
-    type    && `Work type: ${type}`,
-    stage   && `Stage: ${stage}`
-  ].filter(Boolean).join('. ');
+  if (FREE_LIMIT_ON && !isSubscriber() && hasFreeUsed()) {
+    showPaywall();
+    return;
+  }
 
   document.getElementById('brand-space').classList.add('hidden');
   document.getElementById('results-space').classList.remove('active');
+  document.getElementById('error-space').classList.remove('active');
   document.getElementById('loading-space').classList.add('active');
   document.getElementById('btn-evaluate').disabled = true;
   document.querySelector('.input-dock').classList.add('hidden');
-
-  const userMessage = `${context ? 'Context: ' + context + '\n\n' : ''}CONVERSATION LOG:\n\n${content.substring(0, 40000)}`;
 
   try {
     const res = await fetch('/api/trace', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        max_tokens: 1200,
-        system: EVAL_PROMPT,
-        messages: [{ role: 'user', content: userMessage }]
+        log: content,
+        subject: document.getElementById('ctx-subject').value.trim(),
+        type:    document.getElementById('ctx-type').value.trim(),
+        stage:   document.getElementById('ctx-stage').value.trim()
       })
     });
-    const data = await res.json();
-    const text  = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
-    const match = text.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('No JSON returned');
-    showResults(JSON.parse(match[0]));
+
+    let data = null;
+    try { data = await res.json(); } catch (e) { data = null; }
+
+    if (!res.ok || !data || !data.ok) {
+      showError((data && data.error) || 'upstream');
+      return;
+    }
+
+    if (FREE_LIMIT_ON && !isSubscriber()) markFreeUsed();
+    showResults(data.evaluation, data.truncated, FREE_LIMIT_ON && !isSubscriber());
   } catch (e) {
-    document.getElementById('loading-space').classList.remove('active');
-    document.getElementById('brand-space').classList.remove('hidden');
-    document.getElementById('btn-evaluate').disabled = false;
-    document.querySelector('.input-dock').classList.remove('hidden');
-    alert('The evaluation could not be completed. Please try again.');
+    showError('network');
   }
 }
 
-function showResults(r) {
-  const score    = Math.min(100, Math.max(0, r.score || 50));
-  const tier     = r.tier || (score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low');
-  const tierLabel = r.tier_label || (
-    tier === 'high' ? 'High Human Agency' :
-    tier === 'medium' ? 'Medium Human Agency' : 'Low Human Agency'
-  );
+function showResults(r, truncated, showPaywallCard) {
+  const score = Math.min(100, Math.max(0, parseInt(r.score, 10) || 0));
+  const tier  = ['high', 'medium', 'low'].includes(r.tier)
+    ? r.tier
+    : score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
 
-  const momentsHTML = (r.trace_moments || []).map(m => `
-    <div class="trace-moment">
-      <div class="trace-moment-label">${m.label || ''}</div>
-      <div class="trace-moment-text">${m.text || ''}</div>
-    </div>
-  `).join('');
+  const momentsHTML = (r.trace_moments || []).map(m =>
+    '<div class="trace-moment">' +
+      '<div class="trace-moment-label">' + esc(m.label) + '</div>' +
+      '<div class="trace-moment-text">' + esc(m.text) + '</div>' +
+    '</div>'
+  ).join('');
 
-  document.getElementById('results-inner').innerHTML = `
-    <p class="results-eyebrow">Evaluation Complete</p>
-
-    <div class="score-block">
-      <div class="score-number ${tier}">${score}</div>
-      <div class="score-bar-track">
-        <div class="score-bar-fill ${tier}" id="score-bar" style="width:0%"></div>
-      </div>
-      <div class="score-tier ${tier}">${tierLabel}</div>
-    </div>
-
-    <hr class="section-rule">
-
-    <div class="result-section">
-      <span class="section-label">The Reading</span>
-      <p class="rationale-text">${r.rationale || ''}</p>
-    </div>
-
-    ${momentsHTML ? `
-      <hr class="section-rule">
-      <div class="result-section">
-        <span class="section-label">Trace Moments</span>
-        <div class="trace-moments">${momentsHTML}</div>
-      </div>
-    ` : ''}
-
-    ${r.framework_note ? `
-      <div class="framework-note">
-        <span class="section-label">Framework Note</span>
-        <p class="framework-note-text">${r.framework_note}</p>
-      </div>
-    ` : ''}
-
-    <button class="btn-reset" onclick="resetEval()">Evaluate Another</button>
-  `;
+  document.getElementById('results-inner').innerHTML =
+    (truncated
+      ? '<div class="notice">This log exceeded the length limit and was evaluated on its first 40,000 characters.</div>'
+      : '') +
+    '<p class="results-eyebrow">Evaluation Complete</p>' +
+    '<div class="score-block">' +
+      '<div class="score-number ' + tier + '">' + score + '</div>' +
+      '<div class="score-bar-track">' +
+        '<div class="score-bar-fill ' + tier + '" id="score-bar" style="width:0%"></div>' +
+      '</div>' +
+      '<div class="score-tier ' + tier + '">' + esc(r.tier_label) + '</div>' +
+    '</div>' +
+    '<hr class="section-rule">' +
+    '<div class="result-section">' +
+      '<span class="section-label">The Reading</span>' +
+      '<p class="rationale-text">' + esc(r.rationale) + '</p>' +
+    '</div>' +
+    (momentsHTML
+      ? '<hr class="section-rule">' +
+        '<div class="result-section">' +
+          '<span class="section-label">Trace Moments</span>' +
+          '<div class="trace-moments">' + momentsHTML + '</div>' +
+        '</div>'
+      : '') +
+    (r.framework_note
+      ? '<div class="framework-note">' +
+          '<span class="section-label">Framework Note</span>' +
+          '<p class="framework-note-text">' + esc(r.framework_note) + '</p>' +
+        '</div>'
+      : '') +
+    (showPaywallCard
+      ? '<div class="paywall-card">' +
+          '<div class="paywall-inner">' +
+            '<p class="paywall-eyebrow">Your free evaluation is complete.</p>' +
+            '<h2 class="paywall-title">Continue with The Trace.</h2>' +
+            '<p class="paywall-body">20 evaluations per month. Cancel anytime.</p>' +
+            '<a href="/api/checkout" class="btn-subscribe">Subscribe · $5.99 / month</a>' +
+          '</div>' +
+        '</div>'
+      : '<button class="btn-reset" onclick="resetEval()">Evaluate Another</button>');
 
   document.getElementById('loading-space').classList.remove('active');
   document.getElementById('results-space').classList.add('active');
   document.getElementById('btn-evaluate').disabled = false;
 
-  setTimeout(() => {
+  setTimeout(function () {
     const bar = document.getElementById('score-bar');
     if (bar) bar.style.width = score + '%';
   }, 300);
 }
 
+function showPaywall() {
+  document.getElementById('brand-space').classList.add('hidden');
+  document.querySelector('.input-dock').classList.add('hidden');
+  document.getElementById('results-inner').innerHTML =
+    '<div class="paywall-card paywall-card--standalone">' +
+      '<div class="paywall-inner">' +
+        '<p class="paywall-eyebrow">Free evaluation used.</p>' +
+        '<h2 class="paywall-title">Continue with The Trace.</h2>' +
+        '<p class="paywall-body">20 evaluations per month. Cancel anytime.</p>' +
+        '<a href="/api/checkout" class="btn-subscribe">Subscribe · $5.99 / month</a>' +
+      '</div>' +
+    '</div>';
+  document.getElementById('results-space').classList.add('active');
+}
+
 function resetEval() {
   document.getElementById('results-space').classList.remove('active');
+  document.getElementById('error-space').classList.remove('active');
   document.getElementById('results-inner').innerHTML = '';
   document.getElementById('brand-space').classList.remove('hidden');
   document.querySelector('.input-dock').classList.remove('hidden');
@@ -545,6 +674,7 @@ function resetEval() {
   document.getElementById('ctx-subject').value = '';
   document.getElementById('ctx-type').value = '';
   document.getElementById('ctx-stage').value = '';
+  document.getElementById('btn-evaluate').disabled = false;
 }
 </script>
 </body>
